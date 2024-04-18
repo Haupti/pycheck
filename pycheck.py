@@ -27,6 +27,15 @@ def function_t(arg):
 def any_t(arg):
     return (True, "*")
 
+def class_t(clazz):
+    def check(arg):
+        props = dir(arg)
+        for cd in dir(clazz):
+            if(not cd in props):
+                return (False, f": structure not matching. property {cd} of expected type {clazz} is not in {arg}")
+        return (True, "")
+    return check
+
 def list_of_t(fn_t):
     def for_each(lst):
 

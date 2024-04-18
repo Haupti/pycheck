@@ -24,10 +24,19 @@ class Lmao:
     def steve_extra(self):
         return self.steve+1
 
+class Wrong:
+    def greet(name):
+        return f"hi {name}"
+
+@check(class_t(Lmao))
+def takes_lmao(lmao):
+    return lmao.steve_extra()
+
 
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
 function_test(sum, [1,2,3])
+takes_lmao(Lmao())
 
 
