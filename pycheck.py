@@ -21,6 +21,12 @@ def range_t(arg):
 def tuple_t(arg):
    return (type(arg) == tuple, f"{tuple}")
 
+def function_t(arg):
+   return (hasattr(arg, "__call__") , f"<class 'function'>")
+
+def any_t(arg):
+    return (True, "*")
+
 def list_of_t(fn_t):
     def for_each(lst):
 
@@ -54,23 +60,4 @@ def check(*types):
         return wrapper
     return decorator
 
-
-@check(int_t, int_t)
-def add(x,y):
-    return x + y
-
-@check(list_of_t(int_t))
-def sum(lst):
-    thesum = 0
-    for l in lst:
-        thesum += l
-    return thesum
-
-@check(tuple_t)
-def ran(r):
-    return "is a tuple"
-
-print(add(1,2))
-print(sum([1,2,3]))
-print(ran([1,"lol"]))
 
