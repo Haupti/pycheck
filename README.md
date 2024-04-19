@@ -103,3 +103,11 @@ def does_stuff(d):
 
 this way it is verified that the thing given contains all keys that are defined in `my_type_t`, and all of them are of the type specified.\
 this does **not** check if the required keys form `my_type_t` are the only keys in the dictionary. so there can be more.
+
+### the `typedef_t` function
+
+with this you can create type check that check the arguments against one of the allowed values:\
+```python
+my_type_t = typedef_t("first option", "second option", 5, True)
+assert_t(my_type_t, "oh no") # -> raises TypeError
+```
