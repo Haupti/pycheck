@@ -2,6 +2,12 @@ from typing import *
 
 __NO_RETURN_TYPE = 0
 
+def __show_types(types_t):
+    if(len(types_t.__args__) == 1):
+        return (f"[{types_t.__args__[0].__name__}]")
+    else:
+        return list(map(lambda x: x.__name__, types_t.__args__))
+
 def __is_one_of(types_t, arg) -> bool:
     return any(__assert_type(type_t, arg)[0] for type_t in types_t)
 
@@ -10,7 +16,7 @@ def __assert_type(type_t, arg) -> (bool, str):
         case "list":
             if type(arg).__name__ != "list":
                 return (False, f"expected '{arg}' to be of type 'list' but actual is of type '{type(arg).__name__}'")
-            return (all(__is_one_of(type_t.__args__, arg_elem) for arg_elem in arg), f"expected all elements in '{arg}' to be of type 'oneof{type_t.__args__}'")
+            return (all(__is_one_of(type_t.__args__, arg_elem) for arg_elem in arg), f"expected all elements in '{arg}' to be of type 'oneof{__show_types(type_t)}'")
         case "int" | "str" | "float" | "bool":
             return (isinstance(arg, type_t), f"expected '{arg}' to be of type '{type_t.__name__}' but is of type '{type(arg).__name__}'")
         case _ :
@@ -24,7 +30,7 @@ def __enforce(fn, args):
     for index, name in enumerate(names):
         is_success, msg = __assert_type(types[name], args[index])
         if not is_success:
-            raise TypeError(msg)
+            raise TypeError(f"'{name}' has wrong type: {msg}")
     try:
         return types['return']
     except KeyError:
@@ -46,7 +52,7 @@ def enforce(fn):
     return wrapper
 
 @enforce
-def my_func(a: list[int, list[float]], b: int) -> int:
+def my_func(a: list[int, list[int]], b: int) -> int:
     return a[0]
 
-my_func([1, [1.5]], 1)
+my_func([1, "b"], 1)
