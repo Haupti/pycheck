@@ -38,7 +38,7 @@ def do_stuff(a, b):
     assert_t(float_t, result)
     return result
 
-@check(tuple_of_t(int_t, str_t, int_t))
+@check(tuple_of_t(int_t, str_t, list_of_t(int_t)))
 def takes_typed_tuple(t):
     return t
 
@@ -48,6 +48,6 @@ ran((1,"lol"))
 function_test(sum, [1,2,3])
 takes_lmao(Lmao())
 do_stuff(2,2)
-takes_typed_tuple((1,"hi", 1))
+takes_typed_tuple((1,"hi", [1,2,3]))
 
 
