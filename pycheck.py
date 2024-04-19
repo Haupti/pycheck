@@ -1,5 +1,3 @@
-from enum import Enum
-
 def int_t(arg):
    return (type(arg) == int, f"{int}")
 
@@ -56,6 +54,10 @@ def list_of_t(fn_t):
 
 
 def check_types(types, args):
+    num_types = len(types)
+    num_args = len(args)
+    if(num_types != num_args):
+        raise TypeError(f"type signature cannot match: expected {num_types} arguments, but got {num_args} arugments")
     for i, (typecheck, arg) in enumerate(zip(types, args)):
         result, hint = typecheck(arg)
         if(not result):
