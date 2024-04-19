@@ -1,6 +1,6 @@
 __TYPECHECK_SUCCESS = (True, 801)
-def __TYPECHECK_FAILURE(hin):
-    return __TYPECHECK_FAILURE(hint)
+def __TYPECHECK_FAILURE(hint):
+    return (False, hint)
 
 __RETURN_TYPE_MARKER = 1
 
