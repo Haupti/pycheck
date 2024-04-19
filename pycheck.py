@@ -53,6 +53,9 @@ def list_of_t(fn_t):
     return for_each
 
 
+def assert_t(type_t, arg):
+    check_types([type_t], [arg])
+
 def check_types(types, args):
     num_types = len(types)
     num_args = len(args)
