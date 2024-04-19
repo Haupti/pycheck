@@ -1,6 +1,6 @@
 __TYPECHECK_SUCCESS = (True, 801)
 def __TYPECHECK_FAILURE(hin):
-    return (False, hint)
+    return __TYPECHECK_FAILURE(hint)
 
 __RETURN_TYPE_MARKER = 1
 
@@ -42,7 +42,7 @@ def class_t(clazz):
         props = dir(arg)
         for cd in dir(clazz):
             if(not cd in props):
-                return (False, f": structure not matching. property {cd} of expected type {clazz} is not in {arg}")
+                return __TYPECHECK_FAILURE(f": structure not matching. property {cd} of expected type {clazz} is not in {arg}")
         return __TYPECHECK_SUCCESS
     return check
 
@@ -58,7 +58,7 @@ def list_of_t(fn_t):
         for l in lst:
             result, hint = fn_t(l)
             if(not result):
-                return (False, f"{list} of {hint}")
+                return __TYPECHECK_FAILURE(f"{list} of {hint}")
 
         # if the previous type checks did not fail, and thus return, we will land here, and everything is ok
         return __TYPECHECK_SUCCESS
@@ -74,13 +74,13 @@ def tuple_of_t(*types_t):
         num_types = len(types_t)
         num_args = len(arg)
         if(num_types != num_args):
-            return (False, f": type signature cannot match: expected {num_types} elements in {tuple}, but it has {num_args} elements.")
+            return __TYPECHECK_FAILURE(f": type signature cannot match: expected {num_types} elements in {tuple}, but it has {num_args} elements.")
 
         # check if each element of the tuple is of the expected type given
         for i, (a, fn_t) in enumerate(zip(arg, types_t)):
             result, hint = fn_t(a)
             if(not result):
-                return (False, f": element {i+1} was expected to have type {hint}")
+                return __TYPECHECK_FAILURE(f": element {i+1} was expected to have type {hint}")
 
         # if the previous type checks did not fail, and thus return, we will land here and everything is ok
         return __TYPECHECK_SUCCESS
@@ -101,10 +101,10 @@ def typedef_dict_t(typedef_dict):
             try:
                 value = arg[required_key]
             except:
-                return (False, f": expected a key '{required_key}', but it is not there.")
+                return __TYPECHECK_FAILURE(f": expected a key '{required_key}', but it is not there.")
             result, hint = typedef_dict[required_key](value)
             if(not result):
-                return (False, f": expected value of '{required_key}' to be of type {hint}")
+                return __TYPECHECK_FAILURE(f": expected value of '{required_key}' to be of type {hint}")
 
         return __TYPECHECK_SUCCESS
     return dict_type_check
@@ -112,7 +112,7 @@ def typedef_dict_t(typedef_dict):
 def typedef_t(*oneof):
     def is_one_of(arg):
         if not any(arg == o for o in oneof):
-            return (False, f": expected one of {oneof}")
+            return __TYPECHECK_FAILURE(f": expected one of {oneof}")
         else:
             return __TYPECHECK_SUCCESS
     return is_one_of
@@ -120,7 +120,7 @@ def typedef_t(*oneof):
 def typedef_range_t(from_v, to_v):
     def is_in_range(arg):
         if not (from_v <= arg <= to_v):
-            return (False, f": value not in range {from_v}...{to_v}")
+            return __TYPECHECK_FAILURE(f": value not in range {from_v}...{to_v}")
         else:
             return __TYPECHECK_SUCCESS
     return is_in_range
