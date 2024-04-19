@@ -1,4 +1,7 @@
-__TYPECHECK_SUCCESS_MARKER = 801
+__TYPECHECK_SUCCESS = (True, 801)
+def __TYPECHECK_FAILURE(hin):
+    return (False, hint)
+
 __RETURN_TYPE_MARKER = 1
 
 def return_t(type_t):
@@ -32,7 +35,7 @@ def dict_t(arg):
    return (type(arg) == dict, f"{dict}")
 
 def any_t(arg):
-    return (True, __TYPECHECK_SUCCESS_MARKER)
+    return __TYPECHECK_SUCCESS
 
 def class_t(clazz):
     def check(arg):
@@ -40,7 +43,7 @@ def class_t(clazz):
         for cd in dir(clazz):
             if(not cd in props):
                 return (False, f": structure not matching. property {cd} of expected type {clazz} is not in {arg}")
-        return (True, __TYPECHECK_SUCCESS_MARKER)
+        return __TYPECHECK_SUCCESS
     return check
 
 def list_of_t(fn_t):
@@ -58,7 +61,7 @@ def list_of_t(fn_t):
                 return (False, f"{list} of {hint}")
 
         # if the previous type checks did not fail, and thus return, we will land here, and everything is ok
-        return (True, __TYPECHECK_SUCCESS_MARKER)
+        return __TYPECHECK_SUCCESS
     return for_each
 
 def tuple_of_t(*types_t):
@@ -80,7 +83,7 @@ def tuple_of_t(*types_t):
                 return (False, f": element {i+1} was expected to have type {hint}")
 
         # if the previous type checks did not fail, and thus return, we will land here and everything is ok
-        return (True, __TYPECHECK_SUCCESS_MARKER)
+        return __TYPECHECK_SUCCESS
     return for_each
 
 
@@ -103,7 +106,7 @@ def typedef_dict_t(typedef_dict):
             if(not result):
                 return (False, f": expected value of '{required_key}' to be of type {hint}")
 
-        return (True, __TYPECHECK_SUCCESS_MARKER)
+        return __TYPECHECK_SUCCESS
     return dict_type_check
 
 def typedef_t(*oneof):
@@ -111,7 +114,7 @@ def typedef_t(*oneof):
         if not any(arg == o for o in oneof):
             return (False, f": expected one of {oneof}")
         else:
-            return (True, __TYPECHECK_SUCCESS_MARKER)
+            return __TYPECHECK_SUCCESS
     return is_one_of
 
 def typedef_range_t(from_v, to_v):
@@ -119,7 +122,7 @@ def typedef_range_t(from_v, to_v):
         if not (from_v <= arg <= to_v):
             return (False, f": value not in range {from_v}...{to_v}")
         else:
-            return (True, __TYPECHECK_SUCCESS_MARKER)
+            return __TYPECHECK_SUCCESS
     return is_in_range
 
 def __check_type(type_t, arg):
