@@ -94,12 +94,13 @@ def __check_types(types, args):
     for i, (typecheck, arg) in enumerate(zip(types, args)):
         __check_type(typecheck, arg)
 
+__RETURN_TYPE_FLAG = 1
 def return_t(type_t):
-    return ("returntype", type_t)
+    return (__RETURN_TYPE_FLAG, type_t)
 
 def check(*types):
     match types[-1]:
-        case ("returntype", return_type_t):
+        case (__RETURN_TYPE_FLAG, return_type_t):
             def decorator(fn):
                 def wrapper(*args):
                     __check_types(types[:-1], args)

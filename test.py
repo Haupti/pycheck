@@ -67,7 +67,6 @@ takes_typed_tuple((1,"hi", [1,2,3]))
 complex_stuff(MyClass(), (1,1, "hi"))
 Wrong().greet('marwin')
 
-some_number = assume_t(int_t, 1) # runs a check
-some_number = assume_t(str_t, "1")
+some_number = assume_t(list_of_t(int_t), [1,2,3]) # runs a check
 
-print(some_calc(1,2))
+some_calc(1,2)
