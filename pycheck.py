@@ -75,24 +75,42 @@ def tuple_of_t(*types_t):
     return for_each
 
 def assert_t(type_t, arg):
-    check_types([type_t], [arg])
+    __check_type(type_t, arg)
 
-def check_types(types, args):
+def assume_t(type_t, arg):
+    __check_type(type_t, arg)
+    return arg
+
+def __check_type(type_t, arg):
+    result, hint = type_t(arg)
+    if(not result):
+        raise TypeError(f"'{arg}' of type {type(arg)} is not of expected type {hint}")
+
+def __check_types(types, args):
     num_types = len(types)
     num_args = len(args)
     if(num_types != num_args):
         raise TypeError(f"type signature cannot match: expected {num_types} arguments, but got {num_args} arugments")
     for i, (typecheck, arg) in enumerate(zip(types, args)):
-        result, hint = typecheck(arg)
-        if(not result):
-            raise TypeError(f"'{arg}' of type {type(arg)} is not of expected type {hint}")
+        __check_type(typecheck, arg)
+
+def return_t(type_t):
+    return ("returntype", type_t)
 
 def check(*types):
-    def decorator(fn):
-        def wrapper(*args):
-            check_types(types, args)
-            return fn(*args)
-        return wrapper
+    match types[-1]:
+        case ("returntype", return_type_t):
+            def decorator(fn):
+                def wrapper(*args):
+                    __check_types(types[:-1], args)
+                    return assume_t(return_type_t, fn(*args))
+                return wrapper
+        case _:
+            def decorator(fn):
+                def wrapper(*args):
+                    __check_types(types, args)
+                    return fn(*args)
+                return wrapper
     return decorator
 
 

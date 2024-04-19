@@ -25,7 +25,8 @@ class Lmao:
         return self.steve+1
 
 class Wrong:
-    def greet(name):
+    @check(any_t, str_t)
+    def greet(self, name):
         return f"hi {name}"
 
 @check(class_t(Lmao))
@@ -52,6 +53,10 @@ def complex_stuff(a, b):
     b1, b2, str_in_b = b
     return str_in_b, a.somefun() + b1 + b2
 
+@check(int_t, int_t, return_t(int_t))
+def some_calc(a,b):
+    return a+b
+
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
@@ -60,4 +65,9 @@ takes_lmao(Lmao())
 do_stuff(2,2)
 takes_typed_tuple((1,"hi", [1,2,3]))
 complex_stuff(MyClass(), (1,1, "hi"))
+Wrong().greet('marwin')
 
+some_number = assume_t(int_t, 1) # runs a check
+some_number = assume_t(str_t, "1")
+
+print(some_calc(1,2))
