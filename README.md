@@ -21,7 +21,7 @@ there are examples in the test.py file.
 
 however:
 
-```
+```python
 @check(int_t, int_t)
 def do_stuff(a, b):
     result = a / 2
@@ -33,7 +33,7 @@ the `check` decorator will check that, when called, the arguments given are of t
 also it will check, that there are, in fact, two arguments.\
 the `assert_t` will check if the `result` variable is of type `float` and raise a TypeError if it is not.
 
-```
+```python
 class MyClass:
     prop = 0
     def somefun(self):
@@ -54,7 +54,7 @@ the `tuple_of_t(int_t,int_t, str_t)` part checks that the second argument is of 
 \
 another one:
 
-```
+```python
 @check(int_t, int_t, return_t(int_t))
 def some_calc(a,b):
     return a+b
@@ -64,7 +64,7 @@ in this case the first two arguments of the `check` function check the input val
 the third one is used to verify the return type of the function after its execution.\
 \
 and another one:
-```
+```python
 def my_calc_long(b):
     ...
     assert_t(list_of_t(int_t), b)
@@ -87,7 +87,7 @@ this is simply anohter utility function.\
 this one is kind of special, which is why i have a separate section for it.\
 using this, you can define your own type checking function for dictionary types.\
 here is an example:
-```
+```python
 my_type_t = typedef_dict_t({
     "some_key" : int_t,
     123: str_t,
