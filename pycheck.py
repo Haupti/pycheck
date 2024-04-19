@@ -59,6 +59,11 @@ def tuple_of_t(*types_t):
         if(not result_tuple):
             return (result_tuple, hint_tuple)
 
+        num_types = len(types_t)
+        num_args = len(arg)
+        if(num_types != num_args):
+            return (False, f": type signature cannot match: expected {num_types} elements in {tuple}, but it has {num_args} elements.")
+
         # check if each element of the tuple is of the expected type given
         for i, (a, fn_t) in enumerate(zip(arg, types_t)):
             result, hint = fn_t(a)

@@ -59,5 +59,5 @@ function_test(sum, [1,2,3])
 takes_lmao(Lmao())
 do_stuff(2,2)
 takes_typed_tuple((1,"hi", [1,2,3]))
-complex_stuff(MyClass(), (1,1,"hi"))
+complex_stuff(MyClass(), (1,1, "hi"))
 
