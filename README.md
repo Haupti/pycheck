@@ -9,6 +9,7 @@ this lib privides:
 * a decorator for runtime checking the types of the function arguments and return value
 * `assert_t` function for checks inside functions
 * `assume_t` function for checked assignments
+* `typedef_dict_t` function which creates a type checking function for a given dictionary structure
 
 the decorator takes the types as arguments, that your funciton is expecting.\
 optionally you can add return value check as last argument (see examples).\
@@ -62,7 +63,7 @@ def some_calc(a,b):
 in this case the first two arguments of the `check` function check the input values of the function during runtime.\
 the third one is used to verify the return type of the function after its execution.\
 \
-and the last one:
+and another one:
 ```
 def my_calc_long(b):
     ...
@@ -77,8 +78,124 @@ def my_calc(b):
     ...
 ```
 
-unlike the `assert_t` function the `assume_t` function returns the second argument it is given, but also performs the same check as `assert_t` does.
-this is simply anohter utility function.
+unlike the `assert_t` function the `assume_t` function returns the second argument it is given, but also performs the same check as `assert_t` does.\
+this is simply anohter utility function.\
+
+
+### the `typedef_dict_t` function
+
+this one is kind of special, which is why i have a separate section for it.\
+using this, you can define your own type checking function for dictionary types.\
+here is an example:
+```
+my_type_t = typedef_dict_t({
+    "some_key" : int_t,
+    123: str_t,
+    "some_other_key": list_of_t(int_t),
+    })
+
+@check(my_type_t)
+def does_stuff(d):
+    fst = d["some_key"]
+    snd = fst + d["some_other_key"][0]
+    return snd
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

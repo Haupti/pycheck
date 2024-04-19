@@ -1,4 +1,5 @@
 from pycheck import *
+import time
 
 @check(int_t, int_t)
 def add(x,y):
@@ -83,6 +84,7 @@ my_other_type_t = typedef_dict_t({
     "key1": my_type_t
     })
 
+
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
@@ -99,3 +101,10 @@ some_calc(1,2)
 takes_dict({1: "lol"})
 assert_t(my_other_type_t, some_complex_dict)
 
+# some super small basic profiling resulted in the following approximations:
+# if you remove all the check decorators and run the lines above 100 times then it is ~7-9 times faster
+# -> this takes some time!
+
+# note that the above functions are really small and thus the time difference of execution with and without checking is huge
+# if the function does more then the checking will not in take more time, its time requirement is constant
+# maybe dont check functions that are THAT simple...
