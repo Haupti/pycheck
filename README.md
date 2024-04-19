@@ -34,7 +34,7 @@ class MyClass:
     def somefun(self):
         return self.prop + 1
 
-@check(class_t(MyClass), typle_of_t(int_t, int_t, str_t))
+@check(class_t(MyClass), tuple_of_t(int_t, int_t, str_t))
 def do_stuff(a, b):
     b1, b2, str_in_b = b
     print(str_in_b, a.somefun() + b1 + b2)
@@ -45,7 +45,7 @@ this does not neccessarily mean, that `a` must be of type `MyClass` but, that al
 i.e. `a` could have more members, thats ok.\
 **IMPORTANT**: this does **NOT** check the type of the members!\
 \
-the `type_of_t(int_t,int_t, str_t)` part checks that the second argument is of type `tuple` and that it has three entries which are **in order** of types: `int`, `int`, `str`.\
+the `tuple_of_t(int_t,int_t, str_t)` part checks that the second argument is of type `tuple` and that it has three entries which are **in order** of types: `int`, `int`, `str`.\
 
 
 

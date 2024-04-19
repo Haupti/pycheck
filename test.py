@@ -42,6 +42,16 @@ def do_stuff(a, b):
 def takes_typed_tuple(t):
     return t
 
+class MyClass:
+    prop = 0
+    def somefun(self):
+        return self.prop + 1
+
+@check(class_t(MyClass), tuple_of_t(int_t, int_t, str_t))
+def complex_stuff(a, b):
+    b1, b2, str_in_b = b
+    return str_in_b, a.somefun() + b1 + b2
+
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
@@ -49,5 +59,5 @@ function_test(sum, [1,2,3])
 takes_lmao(Lmao())
 do_stuff(2,2)
 takes_typed_tuple((1,"hi", [1,2,3]))
-
+complex_stuff(MyClass(), (1,1,"hi"))
 
