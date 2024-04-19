@@ -26,6 +26,9 @@ def tuple_t(arg):
 def function_t(arg):
    return (hasattr(arg, "__call__") , f"<class 'function'>")
 
+def dict_t(arg):
+   return (type(arg) == dict, f"{dict}")
+
 def any_t(arg):
     return (True, "*")
 
@@ -77,6 +80,29 @@ def tuple_of_t(*types_t):
         # if the previous type checks did not fail, and thus return, we will land here and everything is ok
         return (True, f"{tuple} of {hint}")
     return for_each
+
+
+def typedef_dict_t(typedef_dict):
+    required_keys = typedef_dict.keys()
+    def dict_type_check(arg):
+
+        # checks if the given argument is a dict
+        result_dict, hint_dict = dict_t(arg)
+        if(not result_dict):
+            return (result_dict, hint_dict)
+
+        # checks if all requird keys are inside of the given dict and if they are of correct type (there can be more, they are not checked)
+        for required_key in required_keys:
+            try:
+                value = arg[required_key]
+            except:
+                return (False, f": expected a key '{required_key}', but it is not there.")
+            result, hint = typedef_dict[required_key](value)
+            if(not result):
+                return (False, f": expected value of '{required_key}' to be of type {hint}")
+
+        return (True, f"typedef_dict_t")
+    return dict_type_check
 
 def __check_type(type_t, arg):
     result, hint = type_t(arg)

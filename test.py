@@ -57,6 +57,32 @@ def complex_stuff(a, b):
 def some_calc(a,b):
     return a+b
 
+
+@check(dict_t)
+def takes_dict(d):
+    return d
+
+
+some_dict = {
+     1: "hi",
+     "hi": 2,
+     }
+
+some_complex_dict = {
+        "key0": 1,
+        "key1": some_dict
+        }
+
+my_type_t = typedef_dict_t({
+    1: str_t,
+    "hi": int_t,
+    })
+
+my_other_type_t = typedef_dict_t({
+    "key0": int_t,
+    "key1": my_type_t
+    })
+
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
@@ -66,7 +92,10 @@ do_stuff(2,2)
 takes_typed_tuple((1,"hi", [1,2,3]))
 complex_stuff(MyClass(), (1,1, "hi"))
 Wrong().greet('marwin')
-
 some_number = assume_t(list_of_t(int_t), [1,2,3]) # runs a check
-
+if(some_number != [1,2,3]):
+    raise Error("!!!")
 some_calc(1,2)
+takes_dict({1: "lol"})
+assert_t(my_other_type_t, some_complex_dict)
+
