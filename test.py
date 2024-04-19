@@ -32,16 +32,17 @@ class Wrong:
 def takes_lmao(lmao):
     return lmao.steve_extra()
 
+@check(int_t, int_t)
 def do_stuff(a, b):
-    assert_t(int_t, a)
-    assert_t(int_t, b)
-    return a
+    result = a / b
+    assert_t(float_t, result)
+    return result
 
 add(1,2)
 sum([1,2,3])
 ran((1,"lol"))
 function_test(sum, [1,2,3])
 takes_lmao(Lmao())
-do_stuff(1,2)
+do_stuff(2,2)
 
 
