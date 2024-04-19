@@ -132,7 +132,7 @@ def __check_types(types, args):
     num_args = len(args)
     if(num_types != num_args):
         raise TypeError(f"type signature cannot match: expected {num_types} arguments, but got {num_args} arugments")
-    for i, (typecheck, arg) in enumerate(zip(types, args)):
+    for (typecheck, arg) in zip(types, args):
         __check_type(typecheck, arg)
 
 
