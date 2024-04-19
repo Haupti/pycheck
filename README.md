@@ -5,10 +5,14 @@ just copy pycheck.py into your project and import it, then u can use it.
 
 ## how does it work
 
-this lib provides a decorator and an type-assert function you can decorate your functions with.\
+this lib privides:
+* a decorator for runtime checking the types of the function arguments and return value
+* `assert_t` function for checks inside functions
+* `assume_t` function for checked assignments
+
 the decorator takes the types as arguments, that your funciton is expecting.\
+optionally you can add return value check as last argument (see examples).\
 it then runs a check on all given arguments when you call the function to verify they are what you told the decorator they are.\
-additional there is a type-assert function you can use within your functions (utility).
 
 ## how to use
 
@@ -46,6 +50,35 @@ i.e. `a` could have more members, thats ok.\
 **IMPORTANT**: this does **NOT** check the type of the members!\
 \
 the `tuple_of_t(int_t,int_t, str_t)` part checks that the second argument is of type `tuple` and that it has three entries which are **in order** of types: `int`, `int`, `str`.\
+\
+another one:
+
+```
+@check(int_t, int_t, return_t(int_t))
+def some_calc(a,b):
+    return a+b
+```
+
+in this case the first two arguments of the `check` function check the input values of the function during runtime.\
+the third one is used to verify the return type of the function after its execution.\
+\
+and the last one:
+```
+def my_calc_long(b):
+    ...
+    assert_t(list_of_t(int_t), b)
+    some_numbers = b
+    ...
+
+
+def my_calc(b):
+    ...
+    some_numbers = assume_t(list_of_t(int_t), b)
+    ...
+```
+
+unlike the `assert_t` function the `assume_t` function returns the second argument it is given, but also performs the same check as `assert_t` does.
+this is simply anohter utility function.
 
 
 
