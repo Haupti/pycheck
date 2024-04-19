@@ -102,3 +102,4 @@ takes_dict({1: "lol"})
 assert_t(my_other_type_t, some_complex_dict)
 assert_t(typedef_t("hi", 1), "hi")
 
+assert_t(typedef_range_t(0,5.5), 5.5)

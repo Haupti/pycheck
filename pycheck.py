@@ -109,9 +109,16 @@ def typedef_t(*oneof):
         if not any(arg == o for o in oneof):
             return (False, f": expected one of {oneof}")
         else:
-            return (True, f": expected one of {oneof}")
+            return (True, '')
     return is_one_of
 
+def typedef_range_t(from_v, to_v):
+    def is_in_range(arg):
+        if not (from_v <= arg <= to_v):
+            return (False, f": value not in range {from_v}...{to_v}")
+        else:
+            return (True, '')
+    return is_in_range
 
 def __check_type(type_t, arg):
     result, hint = type_t(arg)
