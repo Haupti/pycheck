@@ -2,9 +2,16 @@ from typing import *
 
 __NO_RETURN_TYPE = 0
 
+__CHECK_FAILURE = False
+__CHECK_SUCCESS = True
+__CHECK_ERROR = -1
+
+class EnforceError(Exception):
+    pass
+
 def __show_types(types_t):
     if(len(types_t.__args__) == 1):
-        return (f"[{types_t.__args__[0].__name__}]")
+        return f"[{types_t.__args__[0].__name__}]"
     else:
         return list(map(lambda x: x.__name__, types_t.__args__))
 
@@ -15,12 +22,12 @@ def __assert_type(type_t, arg) -> (bool, str):
     match type_t.__name__:
         case "list":
             if type(arg).__name__ != "list":
-                return (False, f"expected '{arg}' to be of type 'list' but actual is of type '{type(arg).__name__}'")
+                return (__CHECK_FAILURE, f"expected '{arg}' to be of type 'list' but actual is of type '{type(arg).__name__}'")
             return (all(__is_one_of(type_t.__args__, arg_elem) for arg_elem in arg), f"expected all elements in '{arg}' to be of type 'oneof{__show_types(type_t)}'")
         case "int" | "str" | "float" | "bool":
             return (isinstance(arg, type_t), f"expected '{arg}' to be of type '{type_t.__name__}' but is of type '{type(arg).__name__}'")
         case _ :
-            return (False, "type not checked")
+            return (__CHECK_ERROR, f"type '{type_t.__name__}' cannot be enfoced")
 
 def __enforce(fn, args):
     names = fn.__code__.co_varnames
@@ -28,9 +35,12 @@ def __enforce(fn, args):
     type_keys = types.keys()
 
     for index, name in enumerate(names):
-        is_success, msg = __assert_type(types[name], args[index])
-        if not is_success:
+        result, msg = __assert_type(types[name], args[index])
+        if(__CHECK_FAILURE):
             raise TypeError(f"'{name}' has wrong type: {msg}")
+        elif(__CHECK_ERROR):
+                raise EnforceError(msg)
+
     try:
         return types['return']
     except KeyError:
@@ -52,7 +62,7 @@ def enforce(fn):
     return wrapper
 
 @enforce
-def my_func(a: list[int, list[int]], b: int) -> int:
+def my_func(a: tuple[int, float], b: int) -> int:
     return a[0]
 
 my_func([1, "b"], 1)
