@@ -104,6 +104,15 @@ def typedef_dict_t(typedef_dict):
         return (True, f"typedef_dict_t")
     return dict_type_check
 
+def typedef_t(*oneof):
+    def is_one_of(arg):
+        if not any(arg == o for o in oneof):
+            return (False, f": expected one of {oneof}")
+        else:
+            return (True, f": expected one of {oneof}")
+    return is_one_of
+
+
 def __check_type(type_t, arg):
     result, hint = type_t(arg)
     if(not result):

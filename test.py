@@ -100,11 +100,5 @@ if(some_number != [1,2,3]):
 some_calc(1,2)
 takes_dict({1: "lol"})
 assert_t(my_other_type_t, some_complex_dict)
+assert_t(typedef_t("hi", 1), "hi")
 
-# some super small basic profiling resulted in the following approximations:
-# if you remove all the check decorators and run the lines above 100 times then it is ~7-9 times faster
-# -> this takes some time!
-
-# note that the above functions are really small and thus the time difference of execution with and without checking is huge
-# if the function does more then the checking will not in take more time, its time requirement is constant
-# maybe dont check functions that are THAT simple...
