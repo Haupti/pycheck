@@ -109,5 +109,7 @@ this does **not** check if the required keys form `my_type_t` are the only keys 
 with this you can create type check that check the arguments against one of the allowed values:\
 ```python
 my_type_t = typedef_t("first option", "second option", 5, True)
-assert_t(my_type_t, "oh no") # -> raises TypeError
+assert_t(my_type_t, "oh no") # raises TypeError
+assert_t(my_type_t, "5") # raises TypeError
+assert_t(my_type_t, 5) # ok
 ```
