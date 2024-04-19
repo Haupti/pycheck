@@ -52,6 +52,22 @@ def list_of_t(fn_t):
         return (True, f"{list} of {hint}")
     return for_each
 
+def tuple_of_t(*types_t):
+    def for_each(arg):
+        # check if the argument is a tuple
+        result_tuple, hint_tuple = tuple_t(arg)
+        if(not result_tuple):
+            return (result_tuple, hint_tuple)
+
+        # check if each element of the tuple is of the expected type given
+        for i, (a, fn_t) in enumerate(zip(arg, types_t)):
+            result, hint = fn_t(a)
+            if(not result):
+                return (False, f": element {i+1} was expected to have type {hint}")
+
+        # if the previous type checks did not fail, and thus return, we will land here and everything is ok
+        return (True, f"{tuple} of {hint}")
+    return for_each
 
 def assert_t(type_t, arg):
     check_types([type_t], [arg])

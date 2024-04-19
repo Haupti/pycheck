@@ -34,9 +34,13 @@ def takes_lmao(lmao):
 
 @check(int_t, int_t)
 def do_stuff(a, b):
-    result = a / b
+    result = a / 2
     assert_t(float_t, result)
     return result
+
+@check(tuple_of_t(int_t, str_t, int_t))
+def takes_typed_tuple(t):
+    return t
 
 add(1,2)
 sum([1,2,3])
@@ -44,5 +48,6 @@ ran((1,"lol"))
 function_test(sum, [1,2,3])
 takes_lmao(Lmao())
 do_stuff(2,2)
+takes_typed_tuple((1,"hi", 1))
 
 
