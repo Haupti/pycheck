@@ -1,3 +1,4 @@
+
 __TYPECHECK_SUCCESS = (True, 801)
 def __TYPECHECK_FAILURE(hint):
     return (False, hint)

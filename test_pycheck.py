@@ -1,3 +1,4 @@
+from typing import *
 from pycheck import *
 import time
 
@@ -58,7 +59,6 @@ def complex_stuff(a, b):
 def some_calc(a,b):
     return a+b
 
-
 @check(dict_t)
 def takes_dict(d):
     return d
@@ -84,6 +84,11 @@ my_other_type_t = typedef_dict_t({
     "key1": my_type_t
     })
 
+def my_func(i: int) -> int:
+    print(get_type_hints(my_func))
+    return i + 1
+
+my_func(1)
 
 add(1,2)
 sum([1,2,3])
