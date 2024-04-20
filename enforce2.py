@@ -55,6 +55,9 @@ def __default_failure(enforce_value: EnforceValue) -> None:
 
 def __show_list(lst):
     return "[{0}]".format(', '.join(map(str, lst)))
+
+_NOSTR = ''
+
 #
 # type parsing functions
 #
@@ -73,7 +76,6 @@ def __parse_types(names: list[str], args: list[any], types: dict) -> list[Enforc
 
 def __parse_type(type_t: any) -> EnforceType:
     match type_t.__name__:
-        # any
         # union
         # class
         case 'int':
@@ -96,6 +98,11 @@ def __parse_type(type_t: any) -> EnforceType:
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             type_hint = __show_list(tuple([inner_type.display_name for inner_type in inner_types]))
             return EnforceType(_TYPE_TUPLE, inner_types, f"tuple{type_hint}")
+        case 'Union':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
+            return EnforceType(_TYPE_UNION, inner_types, f"union{type_hint}")
         case _:
             return EnforceType(_TYPE_UNKNOWN, None, f"{type(type_t)}")
 
@@ -135,15 +142,20 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         if not isinstance(enforce_value.value, list):
             return __default_failure(enforce_value)
         for elem in enforce_value.value:
-            if not any([__enforce_type(EnforceValue(elem, enforce_value.name, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+            if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
                 return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_TUPLE):
         if not isinstance(enforce_value.value, tuple):
             return __default_failure(enforce_value)
         for (elem, type_e) in zip(enforce_value.value, enforce_value.expected_type.inner_type):
-            if not __enforce_type(EnforceValue(elem, enforce_value.name, type_e))[0]:
+            if not __enforce_type(EnforceValue(elem, _NOSTR, type_e))[0]:
                 return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_UNION):
+        if not any([__enforce_type(EnforceValue(enforce_value.value, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+            print('well')
+            return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_ANY):
         return _TYPECHECK_SUCCESS
@@ -175,8 +187,13 @@ def __force(fn, args):
     return return_value
 
 #
-# exposed decorator
+# exposed
 #
+
+union = Typing.Union
+
+# TODO add an assert function
+
 def force(fn):
     def wrapper(*args):
         if(TYPECHECKING_ENABLED):
@@ -200,6 +217,17 @@ def test2(i: list[tuple[int, float], str]) -> int:
 def test3(i: tuple[int, float]) -> int:
     return 1
 
+@force
+def test4(thing: any) -> int:
+    return 1
+
+@force
+def test5(thing: union[str, float]) -> union[str, float]:
+    return thing
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
+test4("hi")
+test4(123)
+test5("hi")
