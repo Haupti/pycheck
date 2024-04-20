@@ -35,6 +35,10 @@ def test7(thing: list[str, int]) -> any:
 def test8(thing: function, arg: int) -> int:
     return thing(arg)
 
+@enforce
+def test9(msg: str) -> None:
+    "hi"
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -45,3 +49,4 @@ test6([1])
 test6([1.5, "hi", 2, 3])
 test7(["s"])
 test8(lambda x: 1+x, 2)
+test9("hi")

@@ -127,6 +127,8 @@ def __parse_type(type_t: any) -> EnforceType:
             return EnforceType(_TYPE_ANY, None, "any")
         case 'function':
             return EnforceType(_TYPE_FUNCTION, None, "function")
+        case 'NoneType':
+            return EnforceType(_TYPE_NONE, None, "None")
         case 'list':
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
@@ -195,11 +197,15 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         if not any([__enforce_type(EnforceValue(enforce_value.value, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
             return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
-    elif(marker == _TYPE_ANY):
-        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_FUNCTION):
         if not isinstance(enforce_value.value, function):
             return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_NONE):
+        if not enforce_value.value is None:
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_ANY):
         return _TYPECHECK_SUCCESS
     else:
         return __type_unknown_failure(enforce_value.expected_type.display_name, enforce_value.name)
