@@ -83,8 +83,11 @@ def __enforce(fn, args):
     types = get_type_hints(fn)
     type_keys = types.keys()
 
+    present_names = [name for name in names if name in type_keys]
+    print(present_names)
+    # TODO indexes do not match anymore....
     # check all the types of function arguments, if they have annotation
-    for index, name in enumerate(names):
+    for index, name in enumerate(present_names):
         result, msg = __assert_type(types[name], args[index])
         if(result == __CHECK_FAILURE):
             raise TypeError(f"'{name}' has wrong type: {msg}")
@@ -126,6 +129,14 @@ def my_func_2(a: list[list[int], float], b: int) -> list[int, float]:
 def my_func_3(a: int) -> Union[int, float]:
     return a 
 
+class MyClass:
+    name = "steve"
+    @enforce
+    def my_func_class(self, a: int) -> str:
+        return f"{self.name} + {a}"
+
+
 my_func_1((1, 1.0), "hi")
 my_func_2([[1], 1.0], 1)
 my_func_3(1)
+MyClass().my_func_class(1)
