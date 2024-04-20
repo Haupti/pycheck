@@ -60,9 +60,14 @@ for the class case here is another example:
 class Person:
     name = "steve"
 
+    @enfoce
+    def getMyName(self: any) -> str:
+        return self.name
+
 @enforce
 def getName(p: Person) -> str:
     return p.name
+
 
 #  type checking will occur here:
 getName(Person())
