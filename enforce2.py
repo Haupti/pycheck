@@ -12,6 +12,7 @@ import typing as Typing
 # global flag to enable/disable typechecking by enforce
 TYPECHECKING_ENABLED = True
 
+
 # zero overhead 'enum'
 # EnforceTypeEnum
 _TYPE_UNKNOWN = 0
@@ -45,6 +46,16 @@ class EnforceValue:
         self.name = n
         self.expected_type = e
 
+#
+# utilities
+#
+_TYPECHECK_SUCCESS = (True, '')
+def __default_failure(enforce_value: EnforceValue) -> None:
+    return (False, f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
+
+#
+# type parsing functions
+#
 def __parse_types(names: list[str], args: list[any], types: dict) -> list[EnforceValue]:
     if len(args) != len(types):
         raise TypeError("all function arguments are required to have type annotations.")
@@ -70,36 +81,54 @@ def __parse_type(type_t: any) -> EnforceType:
             return EnforceType(_TYPE_STR, None, "str")
         case 'any':
             return EnforceType(_TYPE_ANY, None, "any")
+        case 'list':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = [inner_type.display_name for inner_type in inner_types]
+            return EnforceType(_TYPE_LIST, inner_types, f"list{type_hint}")
         case _:
             return EnforceType(_TYPE_UNKNOWN, None, f"{type(type_t)}")
 
     return EnforceType(_TYPE_UNKNOWN, None, "???")
 
+#
+# type verification functions
+#
 def __enforce_types(enforce_values: list[EnforceValue]) -> None:
     for enforce_value in enforce_values:
-        __enforce_type(enforce_value)
+        is_success, msg = __enforce_type(enforce_value)
+        if not is_success:
+            raise TypeError(msg)
 
-def __raise_default_err(enforce_value: EnforceValue) -> None:
-    raise TypeError(f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
-
-def __enforce_type(enforce_value: EnforceValue) -> None:
+def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     marker = enforce_value.expected_type.type_marker
     if(marker == _TYPE_INT):
         if not isinstance(enforce_value.value, int):
-            __raise_default_err(enforce_value)
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_FLOAT):
         if not isinstance(enforce_value.value, float):
-            __raise_default_err(enforce_value)
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_BOOL):
         if not isinstance(enforce_value.value, bool):
-            __raise_default_err(enforce_value)
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_STR):
         if not isinstance(enforce_value.value, str):
-            __raise_default_err(enforce_value)
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_LIST):
+        if not isinstance(enforce_value.value, list):
+            return __default_failure(enforce_value)
+        for elem in enforce_value.value:
+            if not any([__enforce_type(EnforceValue(elem, enforce_value.name, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_ANY):
-        pass
+        return _TYPECHECK_SUCCESS
     else:
-        raise TypeError(f"_TYPE_UNKNOWN: type '{enforce_value.expected_type.display_name}' of '{enforce_value.name}' is not supported by enforce")
+        return (False, f"_TYPE_UNKNOWN: type '{enforce_value.expected_type.display_name}' of '{enforce_value.name}' is not supported by enforce")
 
 #general strategy is to fail as fast as possible
 #-> return type check is done first, because then nothing else has to be done, if this fails
@@ -125,6 +154,9 @@ def __force(fn, args):
     # return function result
     return return_value
 
+#
+# exposed decorator
+#
 def force(fn):
     def wrapper(*args):
         if(TYPECHECKING_ENABLED):
@@ -133,8 +165,11 @@ def force(fn):
             return fn(*args)
     return wrapper
 
+#
+# tests
+#
 @force
-def test1(i: int, j: list[float], k: bool, l: str) -> int:
+def test1(i: int, j: list[float, int], k: bool, l: str) -> int:
     return i
 
-test1(1, 1.1, True, "hi")
+test1(1, [22], True, "hi")
