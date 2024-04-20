@@ -28,6 +28,9 @@ _TYPE_DICT = 9
 _TYPE_CLASS = 10
 _TYPE_NONE = 11
 
+class EnforceError(Exception):
+    pass
+
 class EnforceType:
     type_marker = _TYPE_UNKNOWN # EnforceTypeEnum
     inner_type = None # EnforceType, list of EnforceType, None
@@ -51,6 +54,8 @@ class EnforceValue:
 #
 def __show_list(lst):
     return "[{0}]".format(', '.join(map(str, lst)))
+def __show_tuple(lst):
+    return "({0})".format(', '.join(map(str, lst)))
 
 _NOSTR = ''
 
@@ -61,12 +66,14 @@ def __default_failure(enforce_value: EnforceValue) -> (bool, str):
 
 def __type_unknown_error(type_t):
     err_hint = type_t
-    if isinstance(type_t, (list, tuple)):
-        try:
+    try:
+        if isinstance(type_t, list):
             err_hint = __show_list([t.__name__ for t in type_t])
-        except:
-            pass
-    raise TypeError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
+        elif isinstance(type_t, tuple):
+            err_hint = __show_tuple([t.__name__ for t in type_t])
+    except:
+        pass
+    raise EnforceError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
 
 def __type_unknown_failure(typename: str, argname: str) -> (bool, str):
     return (False, f"_TYPE_UNKNOWN: type '{typename}' of '{argname}' is not supported by enforce")
@@ -256,6 +263,10 @@ def test5(thing: union[str, float]) -> union[str, float]:
 def test6(thing: list[str, int]) -> union[str, float]:
     return thing
 
+@force
+def test7(thing: list[str, int]) -> any:
+    return thing
+
 #test1(1, [22], True, "hi")
 #test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 #test3((1,2.2))
@@ -264,3 +275,4 @@ def test6(thing: list[str, int]) -> union[str, float]:
 #test5("hi")
 test6([1])
 #test6([1, "hi", 2, 3])
+#test7(["s"])
