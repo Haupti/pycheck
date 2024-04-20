@@ -35,18 +35,21 @@ _
 | enable_enforce | function() -> None | enables typechecking globaly (default) |
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |
+| function | type | alias for types.FunctionType (exported by the types module) |
 
 
 ## which types are supported
 at the moment, the following types are supported:
 | type | examples | the parameter annotated with this type... |
 | --- | --- | --- |
-| int | 1, 2, 3 | must be of type int (bool is **not** treated as an int) |
-| float | 1.1, 2.2, 3.0 | must be of type float |
-| str | "wow" | must be of type str |
-| bool | True | must be of type bool (bool is **not** treated as an int) |
-| any | | it is not checked |
-| union | union[int, float] | must be of either of type int or float |
-| list[<types>] | list[int, float] | must be a list and all elements must be either of type int or of type float |
-|  | list[str] | must be a list and all elements in this list must be of type str |
-| tuple[<types>] | tuple[str, int] | the elements in the given tuple must be of type str (at 0) and int (at 1) |
+| int | 1, 2, 3 | ... must be of type int (bool is **not** treated as an int) |
+| float | 1.1, 2.2, 3.0 | ... must be of type float |
+| str | "wow" | ... must be of type str |
+| bool | True | ... must be of type bool (bool is **not** treated as an int) |
+| function | |  ... must be of type function |
+| any | |  ...is not checked |
+| None | | ... must not be there or explicity None (works for return/no returns) |
+| union | union[int, float] | ... must be of either of type int or float |
+| list[<types>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
+|  | list[str] | ... must be a list and all elements in this list must be of type str |
+| tuple[<types>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
