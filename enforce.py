@@ -55,8 +55,12 @@ def __check_list(type_t, arg):
 def __check_primitive(type_t, arg):
     return (isinstance(arg, type_t), __typerr_msg(arg, type(arg).__name__, type_t.__name__))
 
+def __check_union(type_t, arg):
+        return (__is_one_of(type_t.__args__, arg), __typerr_msg(arg, f'union{__show_types(type_t)}', type(arg)))
+
 def __assert_type(type_t, arg) -> (bool, str):
-    if not ((type(type_t).__name__ == "type") | (type(type_t).__name__ == "GenericAlias")):
+    typetype= type(type_t).__name__
+    if not ((typetype == "type") | (typetype == "GenericAlias") | (typetype == "_UnionGenericAlias")):
         return (__CHECK_ERROR, f"the given type argument '{type_t}' is not a type")
 
     match type_t.__name__:
@@ -66,7 +70,8 @@ def __assert_type(type_t, arg) -> (bool, str):
             return __check_list(type_t, arg)
         case "int" | "str" | "float" | "bool":
             return __check_primitive(type_t, arg)
-        # TODO cases: union, class
+        case "Union":
+            return __check_union(type_t, arg)
         case _:
             return (__CHECK_ERROR, f"type '{type_t.__name__}' cannot be enfoced")
 
@@ -95,7 +100,7 @@ def __enforce(fn, args):
 
 def __return(type_t, val):
     result, msg = __assert_type(type_t, val)
-    if(result):
+    if(result == __CHECK_SUCCESS):
         return val
     else:
         raise TypeError(f"in return value: {msg}")
@@ -119,7 +124,7 @@ def my_func_2(a: list[list[int], float], b: int) -> list[int, float]:
 
 @enforce
 def my_func_3(a: int) -> Union[int, float]:
-    return a
+    return a 
 
 my_func_1((1, 1.0), "hi")
 my_func_2([[1], 1.0], 1)
