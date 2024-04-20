@@ -50,10 +50,10 @@ at the moment, the following types are supported:
 | any | |  ...is not checked |
 | None | | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |
-| list[<types>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
+| list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
 |  | list[str] | ... must be a list and all elements in this list must be of type str |
-| tuple[<types>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
-| <class> |  | ... must be an object the class in the annotation |
+| tuple[\<types\>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
+| \<class\> |  | ... must be an object the class in the annotation |
 
 for the class case here is another example:
 ```python
