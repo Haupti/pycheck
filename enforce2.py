@@ -1,3 +1,4 @@
+import typing as Typing
 """docs
 
 # Rules
@@ -27,22 +28,36 @@ _TYPE_CLASS = 10
 _TYPE_NONE = 11
 
 class EnforceType:
-    type_t = _TYPE_UNKNOWN # EnforceTypeEnum
-    inner_type = None # EnforceType, list of EnforceType
+    type_marker = _TYPE_UNKNOWN # EnforceTypeEnum
+    inner_type = None # EnforceType, list of EnforceType, None
+    def __init__(self, marker, inner):
+        self.type_marker = marker
+        self.inner_type = inner
 
 class EnforceValue:
     value = None # any
     name = None # string
     expected_type = None # EnfoceType
+    def __init__(self, v, n, e):
+        self.value = v
+        self.name = n
+        self.expected_type = e
 
 def __parse_types(names: list[str], args: list[any], types: dict) -> list[EnforceValue]:
     if len(args) != len(types):
         raise TypeError("all function arguments are required to have type annotations. there are {len(args)} arguments but {len(types)} type annotations.")
     enforce_values = []
+    print("HERE")
+    for (name, arg) in zip(names, args):
+        type_t = types[name]
+        print(name, arg, type_t)
+        enforce_type = __parse_type(type_t)
+
+        enforce_value = EnforceValue(arg, name, enforce_type)
     return []
 
-def __parse_type(name: str, arg: any, type_t: any) -> EnforceValue:
-    pass # TODO
+def __parse_type(type_t: any) -> EnforceType:
+    return EnforceType(_TYPE_UNKNOWN, None)
 
 def __enforce_types(enforce_values: list[EnforceValue]) -> None:
     pass # TODO
@@ -55,7 +70,7 @@ general strategy is to fail as fast as possible
 """
 def __force(fn, args):
     names = fn.__code__.co_varnames
-    types = get_type_hints(fn)
+    types = Typing.get_type_hints(fn)
 
     # check if return type is not specified
     return_type = types['return'] # required at the end
@@ -69,7 +84,7 @@ def __force(fn, args):
 
     # checking return type
     return_value = fn(*args)
-    enforce_return_value = __parse_type('retrun', return_value, return_type)
+    enforce_return_value = EnforceValue('return', return_value, __parse_type(return_type))
     __enforce_type(enforce_return_value)
 
     # return function result
@@ -83,5 +98,8 @@ def force(fn):
             return fn(*args)
     return wrapper
 
-dic = { "hi": 1, "hallo": 2}
-if "steve" in dic.keys(): dic.pop("steve")
+@force
+def test1(i: int)-> int:
+    return i
+
+test1(1)
