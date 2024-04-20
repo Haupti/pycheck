@@ -35,7 +35,7 @@ class EnforceError(Exception):
 
 class EnforceType:
     type_marker = _TYPE_UNKNOWN # EnforceTypeEnum
-    inner_type = None # EnforceType, list of EnforceType, None
+    inner_type = None # EnforceType, list of EnforceType, str (in case of class type), None
     display_name = "" # str
     def __init__(self, marker, inner, name):
         self.type_marker = marker
@@ -107,11 +107,11 @@ def __parse_types(names: list[str], args: list[any], types: dict) -> list[Enforc
     return enforce_values
 
 def __parse_type(type_t: any) -> EnforceType:
-    typename = ''
-    try:
-        typename = type_t.__name__
-    except:
+    typename = None
+    if not hasattr(type_t, '__name__'):
         __type_unknown_error(type_t)
+    else:
+        typename = type_t.__name__
     match typename:
         # union
         # class
@@ -145,9 +145,10 @@ def __parse_type(type_t: any) -> EnforceType:
             type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
             return EnforceType(_TYPE_UNION, inner_types, f"union{type_hint}")
         case _:
+            if hasattr(type_t, '__name__'):
+                classname = type_t.__name__
+                return EnforceType(_TYPE_CLASS, classname, classname)
             return EnforceType(_TYPE_UNKNOWN, None, f"{type(type_t)}")
-
-    return EnforceType(_TYPE_UNKNOWN, None, "???")
 
 #
 # type verification functions
@@ -201,6 +202,10 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         if not isinstance(enforce_value.value, function):
             return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_CLASS):
+        if not enforce_value.value.__class__.__name__ == enforce_value.expected_type.inner_type:
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_NONE):
         if not enforce_value.value is None:
             return __default_failure(enforce_value)
@@ -217,9 +222,9 @@ def __force(fn, args):
     types = Typing.get_type_hints(fn)
 
     # check if return type is not specified
-    return_type = types['return'] # required at the end
     if(not 'return' in types.keys()):
         raise TypeError("enforce expects a return type to be specified")
+    return_type = types['return'] # required at the end
 
     # checking argument types
     types.pop("return") # cannot be in the dict for the next step

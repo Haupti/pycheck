@@ -46,7 +46,7 @@ at the moment, the following types are supported:
 | float | 1.1, 2.2, 3.0 | ... must be of type float |
 | str | "wow" | ... must be of type str |
 | bool | True | ... must be of type bool (bool is **not** treated as an int) |
-| function | |  ... must be of type function |
+| function | |  ... must be of type function (lambda or function, but **not** a class method) |
 | any | |  ...is not checked |
 | None | | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |

@@ -1,4 +1,4 @@
-from enforce import enforce, union, function
+from enforce import enforce, union, function, EnforceError
 
 #
 # to run the 'tests', run the file using the python interpreter
@@ -39,6 +39,25 @@ def test8(thing: function, arg: int) -> int:
 def test9(msg: str) -> None:
     "hi"
 
+class ClassOne:
+    var = "hi"
+    @enforce
+    def getVar(self: any) -> str:
+        return self.var
+
+class ClassTwo:
+    hey = "whoop"
+    def setHey(self, s):
+        self.hey = var
+
+@enforce
+def test10(clazz: ClassOne) -> str:
+    return clazz.getVar()
+
+@enforce
+def test11(thing: [int, str]) -> list[int, str]:
+    return thing
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -50,3 +69,8 @@ test6([1.5, "hi", 2, 3])
 test7(["s"])
 test8(lambda x: 1+x, 2)
 test9("hi")
+test10(ClassOne())
+try:
+    test11([1, "hi"])
+except EnforceError:
+    pass
