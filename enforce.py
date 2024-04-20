@@ -134,9 +134,3 @@ class MyClass:
     @enforce
     def my_func_class(self, a: int) -> str:
         return f"{self.name} + {a}"
-
-
-my_func_1((1, 1.0), "hi")
-my_func_2([[1], 1.0], 1)
-my_func_3(1)
-MyClass().my_func_class(1)
