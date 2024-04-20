@@ -1,136 +1,246 @@
-from typing import *
+import typing as Typing
+"""docs
 
-__NO_RETURN_TYPE = 0
+# Rules
 
-__CHECK_FAILURE = False
-__CHECK_SUCCESS = True
-__CHECK_ERROR = -1
+* enforce expects every argument to be annotated, it will fail if there is no annotation.
+  if the type is to hard to figure out or something, you can set the type to 'any'
+
+* return values are always checked and expected, enforce will fail if there is no return type. you can set it to 'any' though
+"""
+
+# global flag to enable/disable typechecking by enforce
+_TYPECHECKING_ENABLED = True
+
+
+# zero overhead 'enum'
+# EnforceTypeEnum
+_TYPE_UNKNOWN = 0
+_TYPE_ANY = 1
+_TYPE_STR = 2
+_TYPE_INT = 3
+_TYPE_FLOAT = 4
+_TYPE_BOOL = 5
+_TYPE_LIST = 6
+_TYPE_TUPLE = 7
+_TYPE_UNION = 8
+_TYPE_DICT = 9
+_TYPE_CLASS = 10
+_TYPE_NONE = 11
 
 class EnforceError(Exception):
     pass
 
-def __typerr_msg(actual_value, actual_type, expected_type):
-    return f"expected '{actual_value}' to be of type '{expected_type}' but actual is of type '{actual_type}'"
-def __typerr_lst_msg(actual_value, expected_type):
-    return f"expected all elements in '{actual_value}' to be of type '{expected_type}'"
-def __len_mismatch_msg(actual_value, expected_len, type_signature):
-    return  f"expected '{actual_value}' to have {expected_len} elements with type signature '{type_signature}'"
+class EnforceType:
+    type_marker = _TYPE_UNKNOWN # EnforceTypeEnum
+    inner_type = None # EnforceType, list of EnforceType, None
+    display_name = "" # str
+    def __init__(self, marker, inner, name):
+        self.type_marker = marker
+        self.inner_type = inner
+        self.display_name = name
 
-def __show_types(types_t):
-    if(len(types_t.__args__) == 1):
-        return f"[{types_t.__args__[0].__name__}]"
-    else:
-        return list(map(lambda x: x.__name__, types_t.__args__))
+class EnforceValue:
+    value = None # any
+    name = None # string
+    expected_type = None # EnfoceType
+    def __init__(self, v, n, e):
+        self.value = v
+        self.name = n
+        self.expected_type = e
 
-def __is_one_of(types_t, arg) -> bool:
-    # checks if the argument matches any type in the given collection (type-union)
-    return any(__assert_type(type_t, arg)[0] for type_t in types_t)
+#
+# utilities
+#
+def __show_list(lst):
+    return "[{0}]".format(', '.join(map(str, lst)))
+def __show_tuple(lst):
+    return "({0})".format(', '.join(map(str, lst)))
 
-def __check_tuple(type_t, arg):
-    # check if it is a tuple
-    if type(arg).__name__ != "tuple":
-        return (__CHECK_FAILURE, __typerr_msg(arg, type(arg).__name__,'tuple'))
+_NOSTR = ''
 
-    # check if lenght matches
-    if(len(type_t.__args__) != len(arg)):
-        return (__CHECK_FAILURE, __len_mismatch_msg(arg, len(type_t.__args__), type(arg).__args__))
+_TYPECHECK_SUCCESS = (True, '')
 
-    # check if all entries are of the correct type
-    for index, (t, v) in enumerate(zip(type_t.__args__, arg)):
-        result, msg = __assert_type(t, v)
-        if(result != __CHECK_SUCCESS):
-            return (result, f"in tuple position {index}: {msg}")
+def __default_failure(enforce_value: EnforceValue) -> (bool, str):
+    return (False, f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
 
-    # no return so far -> everything ok
-    return (__CHECK_SUCCESS, "")
-
-def __check_list(type_t, arg):
-    # check if it is a list
-    if type(arg).__name__ != "list":
-        return (__CHECK_FAILURE, __typerr_msg(arg,type(arg).__name__, "list"))
-
-    # check if all values in the list are of the expected type(s)
-    return (all(__is_one_of(type_t.__args__, arg_elem) for arg_elem in arg), __typerr_lst_msg(arg, f'union{__show_types(type_t)}'))
-
-def __check_primitive(type_t, arg):
-    return (isinstance(arg, type_t), __typerr_msg(arg, type(arg).__name__, type_t.__name__))
-
-def __check_union(type_t, arg):
-        return (__is_one_of(type_t.__args__, arg), __typerr_msg(arg, f'union{__show_types(type_t)}', type(arg)))
-
-def __assert_type(type_t, arg) -> (bool, str):
-    typetype= type(type_t).__name__
-    if not ((typetype == "type") | (typetype == "GenericAlias") | (typetype == "_UnionGenericAlias")):
-        return (__CHECK_ERROR, f"the given type argument '{type_t}' is not a type")
-
-    match type_t.__name__:
-        case "tuple":
-            return __check_tuple(type_t, arg)
-        case "list":
-            return __check_list(type_t, arg)
-        case "int" | "str" | "float" | "bool":
-            return __check_primitive(type_t, arg)
-        case "Union":
-            return __check_union(type_t, arg)
-        case _:
-            return (__CHECK_ERROR, f"type '{type_t.__name__}' cannot be enfoced")
-
-#TODO a utility function that can be called in code if needed
-
-
-def __enforce(fn, args):
-    names = fn.__code__.co_varnames
-    types = get_type_hints(fn)
-    type_keys = types.keys()
-
-    present_names = [name for name in names if name in type_keys]
-    print(present_names)
-    # TODO indexes do not match anymore....
-    # check all the types of function arguments, if they have annotation
-    for index, name in enumerate(present_names):
-        result, msg = __assert_type(types[name], args[index])
-        if(result == __CHECK_FAILURE):
-            raise TypeError(f"'{name}' has wrong type: {msg}")
-        elif(result == __CHECK_ERROR):
-                raise EnforceError(msg)
-
-    # return the expected type of the return-value or 'nothing', if it should not be checked
+def __type_unknown_error(type_t):
+    err_hint = type_t
     try:
-        return types['return']
-    except KeyError:
-        return __NO_RETURN_TYPE
+        if isinstance(type_t, list):
+            err_hint = __show_list([t.__name__ for t in type_t])
+        elif isinstance(type_t, tuple):
+            err_hint = __show_tuple([t.__name__ for t in type_t])
+    except:
+        pass
+    raise EnforceError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
+
+def __type_unknown_failure(typename: str, argname: str) -> (bool, str):
+    return (False, f"_TYPE_UNKNOWN: type '{typename}' of '{argname}' is not supported by enforce")
+
+def __invalid_type_failure(type_t):
+    typename = ''
+    try:
+        if(isinstance(type_t, list) or isinstance(type_t, tuple)):
+            typename = __show_list(type_t)
+    except: 
+        typename = type_t
+    return (False, f"_TYPE_UNKNOWN: type '{typename}' is not supported by enforce")
 
 
-def __return(type_t, val):
-    result, msg = __assert_type(type_t, val)
-    if(result == __CHECK_SUCCESS):
-        return val
+#
+# type parsing functions
+#
+def __parse_types(names: list[str], args: list[any], types: dict) -> list[EnforceValue]:
+    if len(args) != len(types):
+        raise TypeError("all function arguments are required to have type annotations.")
+
+    # build enforce values
+    enforce_values = []
+    for (name, arg) in zip(names, args):
+        type_t = types[name]
+        enforce_type = __parse_type(type_t)
+        enforce_values.append(EnforceValue(arg, name, enforce_type))
+
+    return enforce_values
+
+def __parse_type(type_t: any) -> EnforceType:
+    typename = ''
+    try:
+        typename = type_t.__name__
+    except:
+        __type_unknown_error(type_t)
+    match typename:
+        # union
+        # class
+        case 'int':
+            return EnforceType(_TYPE_INT, None, "int")
+        case 'float':
+            return EnforceType(_TYPE_FLOAT, None, "float")
+        case 'bool':
+            return EnforceType(_TYPE_BOOL, None, "bool")
+        case 'str':
+            return EnforceType(_TYPE_STR, None, "str")
+        case 'any':
+            return EnforceType(_TYPE_ANY, None, "any")
+        case 'list':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
+            return EnforceType(_TYPE_LIST, inner_types, f"list{type_hint}")
+        case 'tuple':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = __show_list(tuple([inner_type.display_name for inner_type in inner_types]))
+            return EnforceType(_TYPE_TUPLE, inner_types, f"tuple{type_hint}")
+        case 'Union':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
+            return EnforceType(_TYPE_UNION, inner_types, f"union{type_hint}")
+        case _:
+            return EnforceType(_TYPE_UNKNOWN, None, f"{type(type_t)}")
+
+    return EnforceType(_TYPE_UNKNOWN, None, "???")
+
+#
+# type verification functions
+#
+def __enforce_types(enforce_values: list[EnforceValue]) -> None:
+    for enforce_value in enforce_values:
+        is_success, msg = __enforce_type(enforce_value)
+        if not is_success:
+            raise TypeError(msg)
+
+def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
+    marker = enforce_value.expected_type.type_marker
+    if(marker == _TYPE_INT):
+        # boolean is a subtype of int, hence isinstance(True, int) is True...
+        if isinstance(enforce_value.value, bool):
+            return __default_failure(enforce_value)
+        if not isinstance(enforce_value.value, int):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_FLOAT):
+        if not isinstance(enforce_value.value, float):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_BOOL):
+        if not isinstance(enforce_value.value, bool):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_STR):
+        if not isinstance(enforce_value.value, str):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_LIST):
+        if not isinstance(enforce_value.value, list):
+            return __default_failure(enforce_value)
+        for elem in enforce_value.value:
+            if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_TUPLE):
+        if not isinstance(enforce_value.value, tuple):
+            return __default_failure(enforce_value)
+        for (elem, type_e) in zip(enforce_value.value, enforce_value.expected_type.inner_type):
+            if not __enforce_type(EnforceValue(elem, _NOSTR, type_e))[0]:
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_UNION):
+        if not any([__enforce_type(EnforceValue(enforce_value.value, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_ANY):
+        return _TYPECHECK_SUCCESS
     else:
-        raise TypeError(f"in return value: {msg}")
+        return __type_unknown_failure(enforce_value.expected_type.display_name, enforce_value.name)
+
+#general strategy is to fail as fast as possible
+#-> return type check is done first, because then nothing else has to be done, if this fails
+def __force(fn, args):
+    names = fn.__code__.co_varnames
+    types = Typing.get_type_hints(fn)
+
+    # check if return type is not specified
+    return_type = types['return'] # required at the end
+    if(not 'return' in types.keys()):
+        raise TypeError("enforce expects a return type to be specified")
+
+    # checking argument types
+    types.pop("return") # cannot be in the dict for the next step
+    enforce_values = __parse_types(names, args, types)
+    __enforce_types(enforce_values)
+
+    # checking return type
+    return_value = fn(*args)
+    enforce_return_value = EnforceValue(return_value, 'return', __parse_type(return_type))
+    __enforce_types([enforce_return_value])
+
+    # return function result
+    return return_value
+
+#
+# exposed
+#
+
+union = Typing.Union
+
+# TODO add an assert function
+
+def enable_enforce():
+    global _TYPECHECKING_ENABLED
+    _TYPECHECKING_ENABLED = True
+
+def disable_enforce():
+    global _TYPECHECKING_ENABLED
+    _TYPECHECKING_ENABLED = False
 
 def enforce(fn):
     def wrapper(*args):
-        return_type = __enforce(fn, args)
-        if(return_type == __NO_RETURN_TYPE):
-            return fn(*args)
+        global _TYPECHECKING_ENABLED
+        if(_TYPECHECKING_ENABLED):
+            return __force(fn, args)
         else:
-            __return(return_type, fn(*args))
+            return fn(*args)
     return wrapper
-
-@enforce
-def my_func_1(a: tuple[int, float], b: str) -> int:
-    return 1
-
-@enforce
-def my_func_2(a: list[list[int], float], b: int) -> list[int, float]:
-    return [a[0][0], 1.5]
-
-@enforce
-def my_func_3(a: int) -> Union[int, float]:
-    return a 
-
-class MyClass:
-    name = "steve"
-    @enforce
-    def my_func_class(self, a: int) -> str:
-        return f"{self.name} + {a}"
