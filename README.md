@@ -23,10 +23,10 @@ my_function(1, "wow", [1, 2.5, 3.8, 9])
 the decorator requires all function arguments to be typed.\
 the decorator requires a return type.\
 there is no typechecking of a function without the decorator.\
-_note:
-typechecking takes time. especially if you are typechecking large lists. to verify that the list is of the correct type,
-enforce has to iterate over the list.
-_
+*note:*
+*typechecking takes time. especially if you are typechecking large lists. to verify that the list is of the correct type,*
+*enforce has to iterate over the list.*
+
 
 ## api
 
