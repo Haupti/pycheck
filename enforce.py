@@ -56,6 +56,9 @@ def __check_primitive(type_t, arg):
     return (isinstance(arg, type_t), __typerr_msg(arg, type(arg).__name__, type_t.__name__))
 
 def __assert_type(type_t, arg) -> (bool, str):
+    if not ((type(type_t).__name__ == "type") | (type(type_t).__name__ == "GenericAlias")):
+        return (__CHECK_ERROR, f"the given type argument '{type_t}' is not a type")
+
     match type_t.__name__:
         case "tuple":
             return __check_tuple(type_t, arg)
@@ -91,10 +94,11 @@ def __enforce(fn, args):
 
 
 def __return(type_t, val):
-    if(type(val) == type_t):
+    result, msg = __assert_type(type_t, val)
+    if(result):
         return val
     else:
-        raise TypeError(f"expected return type {type_t} but was {type(val)}")
+        raise TypeError(f"in return value: {msg}")
 
 def enforce(fn):
     def wrapper(*args):
@@ -106,7 +110,17 @@ def enforce(fn):
     return wrapper
 
 @enforce
-def my_func(a: tuple[int, float], b: int) -> int:
-    return a[0]
+def my_func_1(a: tuple[int, float], b: str) -> int:
+    return 1
 
-my_func((1, 1.0), 1)
+@enforce
+def my_func_2(a: list[list[int], float], b: int) -> list[int, float]:
+    return [a[0][0], 1.5]
+
+@enforce
+def my_func_3(a: int) -> Union[int, float]:
+    return a
+
+my_func_1((1, 1.0), "hi")
+my_func_2([[1], 1.0], 1)
+my_func_3(1)
