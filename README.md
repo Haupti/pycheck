@@ -21,7 +21,11 @@ my_function(1, "wow", [1, 2.5, 3.8, 9])
 ## general
 
 the decorator requires all function arguments to be typed.\
-the decorator requires a return type.
+the decorator requires a return type.\
+_note:
+typechecking takes time. especially if you are typechecking large lists. to verify that the list is of the correct type,
+enforce has to iterate over the list.
+_
 
 ## api
 
@@ -32,3 +36,17 @@ the decorator requires a return type.
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |
 
+
+## which types are supported
+at the moment, the following types are supported:
+| type | examples | the parameter annotated with this type... |
+| --- | --- | --- |
+| int | | must be of type int (bool is **not** treated as an int) |
+| float | | must be of type float |
+| str | | must be of type str |
+| bool | | must be of type bool (bool is **not** treated as an int) |
+| any | | it is not checked |
+| union | union[int, float] | must be of either of type int or float |
+| list[<types>] | list[int, float] | every element in this list must be either of type int or of type float |
+|  | list[str] | every element in this list must be of type str |
+| tuple[<types>] tuple[str, int] | the elements in the given tuple must be of type str (at 0) and int (at 1) |
