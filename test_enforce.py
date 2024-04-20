@@ -1,4 +1,4 @@
-from enforce import enforce, union, disable_enforce, enable_enforce
+from enforce import enforce, union, function
 
 #
 # to run the 'tests', run the file using the python interpreter
@@ -24,12 +24,16 @@ def test5(thing: union[str, float]) -> union[str, int]:
     return thing
 
 @enforce
-def test6(thing: list[str, int]) -> list[str, int]:
+def test6(thing: list[str, int, float]) -> list[str, int, float]:
     return thing
 
 @enforce
 def test7(thing: list[str, int]) -> any:
     return thing
+
+@enforce
+def test8(thing: function, arg: int) -> int:
+    return thing(arg)
 
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
@@ -40,3 +44,4 @@ test5("hi")
 test6([1])
 test6([1.5, "hi", 2, 3])
 test7(["s"])
+test8(lambda x: 1+x, 2)

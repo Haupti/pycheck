@@ -1,4 +1,5 @@
 import typing as Typing
+import types as Types
 """docs
 
 # Rules
@@ -25,8 +26,9 @@ _TYPE_LIST = 6
 _TYPE_TUPLE = 7
 _TYPE_UNION = 8
 _TYPE_DICT = 9
-_TYPE_CLASS = 10
-_TYPE_NONE = 11
+_TYPE_CLASS = 10 # TODO
+_TYPE_FUNCTION = 11 # TODO
+_TYPE_NONE = 12
 
 class EnforceError(Exception):
     pass
@@ -123,6 +125,8 @@ def __parse_type(type_t: any) -> EnforceType:
             return EnforceType(_TYPE_STR, None, "str")
         case 'any':
             return EnforceType(_TYPE_ANY, None, "any")
+        case 'function':
+            return EnforceType(_TYPE_FUNCTION, None, "function")
         case 'list':
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
@@ -193,6 +197,10 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_ANY):
         return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_FUNCTION):
+        if not isinstance(enforce_value.value, function):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     else:
         return __type_unknown_failure(enforce_value.expected_type.display_name, enforce_value.name)
 
@@ -225,8 +233,7 @@ def __force(fn, args):
 #
 
 union = Typing.Union
-
-# TODO add an assert function
+function = Types.FunctionType
 
 def enable_enforce():
     global _TYPECHECKING_ENABLED
