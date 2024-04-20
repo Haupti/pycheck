@@ -49,14 +49,37 @@ class EnforceValue:
 #
 # utilities
 #
-_TYPECHECK_SUCCESS = (True, '')
-def __default_failure(enforce_value: EnforceValue) -> None:
-    return (False, f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
-
 def __show_list(lst):
     return "[{0}]".format(', '.join(map(str, lst)))
 
 _NOSTR = ''
+
+_TYPECHECK_SUCCESS = (True, '')
+
+def __default_failure(enforce_value: EnforceValue) -> (bool, str):
+    return (False, f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
+
+def __type_unknown_error(type_t):
+    err_hint = type_t
+    if isinstance(type_t, (list, tuple)):
+        try:
+            err_hint = __show_list([t.__name__ for t in type_t])
+        except:
+            pass
+    raise TypeError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
+
+def __type_unknown_failure(typename: str, argname: str) -> (bool, str):
+    return (False, f"_TYPE_UNKNOWN: type '{typename}' of '{argname}' is not supported by enforce")
+
+def __invalid_type_failure(type_t):
+    typename = ''
+    try:
+        if(isinstance(type_t, list) or isinstance(type_t, tuple)):
+            typename = __show_list(type_t)
+    except: 
+        typename = type_t
+    return (False, f"_TYPE_UNKNOWN: type '{typename}' is not supported by enforce")
+
 
 #
 # type parsing functions
@@ -75,7 +98,12 @@ def __parse_types(names: list[str], args: list[any], types: dict) -> list[Enforc
     return enforce_values
 
 def __parse_type(type_t: any) -> EnforceType:
-    match type_t.__name__:
+    typename = ''
+    try:
+        typename = type_t.__name__
+    except:
+        __type_unknown_error(type_t)
+    match typename:
         # union
         # class
         case 'int':
@@ -154,13 +182,12 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_UNION):
         if not any([__enforce_type(EnforceValue(enforce_value.value, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
-            print('well')
             return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_ANY):
         return _TYPECHECK_SUCCESS
     else:
-        return (False, f"_TYPE_UNKNOWN: type '{enforce_value.expected_type.display_name}' of '{enforce_value.name}' is not supported by enforce")
+        return __type_unknown_failure(enforce_value.expected_type.display_name, enforce_value.name)
 
 #general strategy is to fail as fast as possible
 #-> return type check is done first, because then nothing else has to be done, if this fails
@@ -225,9 +252,15 @@ def test4(thing: any) -> int:
 def test5(thing: union[str, float]) -> union[str, float]:
     return thing
 
-test1(1, [22], True, "hi")
-test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
-test3((1,2.2))
-test4("hi")
-test4(123)
-test5("hi")
+@force
+def test6(thing: list[str, int]) -> union[str, float]:
+    return thing
+
+#test1(1, [22], True, "hi")
+#test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
+#test3((1,2.2))
+#test4("hi")
+#test4(123)
+#test5("hi")
+test6([1])
+#test6([1, "hi", 2, 3])
