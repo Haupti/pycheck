@@ -72,6 +72,7 @@ at the moment, the following types are supported:
 |  | list[str] | ... must be a list and all elements in this list must be of type str |
 | tuple[\<types\>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
 | \<class\> |  | ... must be an object the class in the annotation |
+| numpy.ndarray[\<types\>] | numpy.ndarray[numpy.int32] | ... must be an object type ndarray, all elements in the array must be of specified type numpy.int32 |
 
 here is an example how to use the class type:
 ```python
