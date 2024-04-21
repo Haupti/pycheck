@@ -36,12 +36,19 @@ class EnforceError(Exception):
 
 class EnforceType:
     type_marker = _TYPE_UNKNOWN # EnforceTypeEnum
-    inner_type = None # EnforceType, list of EnforceType, str (in case of class type), None
+    inner_type = None # EnforceType, list of EnforceType, str (in case of class type), None, list of EnforceDictEntryType
     display_name = "" # str
     def __init__(self, marker, inner, name):
         self.type_marker = marker
         self.inner_type = inner
         self.display_name = name
+
+class EnforceDictEntryType:
+    enforce_type = None # EnforceType
+    key_name ="" # str
+    def __init__(self, type_e, key_name):
+        self.enforce_type = type_e
+        self.key_name = key_name
 
 class EnforceValue:
     value = None # any
@@ -57,8 +64,10 @@ class EnforceValue:
 #
 def __show_list(lst):
     return "[{0}]".format(', '.join(map(str, lst)))
-def __show_tuple(lst):
-    return "({0})".format(', '.join(map(str, lst)))
+def __show_tuple(tpl):
+    return "({0})".format(', '.join(map(str, tpl)))
+def __show_dict(dct):
+    return "{" + ("{0}".format(', '.join(map(lambda t: f"{t[0]}: {t[1].__name__}", dct.items())))) + "}"
 
 _NOSTR = ''
 
@@ -80,11 +89,11 @@ def __get_type_hint_for_error(type_t):
 
 def __type_unknown_error(type_t):
     err_hint = __get_type_hint_for_error(type_t)
-    raise EnforceError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
+    return EnforceError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
 
 def __type_invalid_error(type_t):
     err_hint = __get_type_hint_for_error(type_t)
-    raise EnforceError(f"_TYPE_INVALID: type '{err_hint}' is not a valid type to be handled by enforce")
+    return EnforceError(f"_TYPE_INVALID: type '{err_hint}' is not a valid type to be handled by enforce")
 
 def __type_unknown_failure(typename: str, argname: str) -> (bool, str):
     return (False, f"_TYPE_UNKNOWN: type '{typename}' of '{argname}' is not supported by enforce")
@@ -98,12 +107,20 @@ def __invalid_type_failure(type_t):
         typename = type_t
     return (False, f"_TYPE_UNKNOWN: type '{typename}' is not supported by enforce")
 
+def __get_verified_dict_innertype(type_t):
+    list_type_args = list(type_t.__args__)
+    if len(list_type_args) != 1:
+        raise __type_invalid_error(type_t)
+    type_arg = list_type_args[0]
+    if type(type_arg).__name__ != 'dict':
+        raise __type_invalid_error(type_t)
+    return type_arg
 
 def __verify_valid_array_innertypes(list_type_args: list[EnforceType]) -> None:
     if len(list_type_args) == 0:
-        return __type_invalid_error(type_t)
+        raise __type_invalid_error(type_t)
     if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
-        return __type_invalid_error(type_t)
+        raise __type_invalid_error(type_t)
 
 #
 # type parsing functions
@@ -124,7 +141,7 @@ def __parse_types(names: list[str], args: list[any], types: dict) -> list[Enforc
 def __parse_type(type_t: any) -> EnforceType:
     typename = None
     if not hasattr(type_t, '__name__'):
-        __type_unknown_error(type_t)
+        raise __type_unknown_error(type_t)
     else:
         typename = type_t.__name__
     match typename:
@@ -156,7 +173,7 @@ def __parse_type(type_t: any) -> EnforceType:
             return EnforceType(_TYPE_LIST, inner_types, f"list{type_hint}")
         case 'ndarray':
             if not hasattr(type_t, '__args__'): # inner type not specified
-                return EnforceType(_TYPE_LIST, [] , f"ndarray[any]")
+                return EnforceType(_TYPE_NDARRAY, [] , f"ndarray[any]")
             list_type_args = list(type_t.__args__)
 
             __verify_valid_array_innertypes(list_type_args)
@@ -174,6 +191,15 @@ def __parse_type(type_t: any) -> EnforceType:
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
             return EnforceType(_TYPE_UNION, inner_types, f"union{type_hint}")
+        case 'dict':
+            if not hasattr(type_t, '__args__'):
+                return EnforceType(_TYPE_DICT, None, "dict")
+            type_arg = __get_verified_dict_innertype(type_t)
+            dict_entries = []
+            for key, value in type_arg.items():
+                dict_entries.append(EnforceDictEntryType(__parse_type(value), key))
+            type_hint = __show_dict(type_arg)
+            return EnforceType(_TYPE_DICT, dict_entries, f'dict{type_hint}')
         case _:
             return EnforceType(_TYPE_CLASS, typename, typename)
 
@@ -250,6 +276,15 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_ANY):
         return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_DICT):
+        if not isinstance(enforce_value.value, dict):
+            return __default_failure(enforce_value)
+        for dict_entry_e in enforce_value.expected_type.inner_type:
+            if enforce_value.value.get(dict_entry_e.key_name) is None:
+                return __default_failure(enforce_value)
+            if not __enforce_type(EnforceValue(enforce_value.value[dict_entry_e.key_name], _NOSTR, dict_entry_e.enforce_type))[0]:
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     else:
         return __type_unknown_failure(enforce_value.expected_type.display_name, enforce_value.name)
 
@@ -277,6 +312,8 @@ def __force(fn, args):
     # return function result
     return return_value
 
+
+# TODO mechanism that determines a visual representation the ACTUAL type in case of failure
 #
 # exposed
 #

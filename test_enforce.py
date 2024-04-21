@@ -61,8 +61,12 @@ def test11(thing: list) -> list:
 
 # special support for numpy arrays
 @enforce
-def test12(arr: np.ndarray[np.int32]) -> any:
+def test12(arr: np.ndarray) -> any:
     return arr[0]
+
+@enforce
+def test13(d: dict[{"num": int, "name": str}]) -> any:
+    return d
 
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
@@ -78,6 +82,7 @@ test9("hi")
 test10(ClassOne())
 test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
 test12(np.array([1]))
+test13({"num": 1, "name": "steve"})
 
 enforced(1, int)
 enforced([1], list[int])
