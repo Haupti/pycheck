@@ -68,6 +68,10 @@ def test12(arr: np.ndarray) -> any:
 def test13(d: dict[{"num": int, "name": str}]) -> any:
     return d
 
+@enforce
+def test14(d: dict[{1: int, 2: list[int], "oh hi": dict[{"greet": str}]}]) -> any:
+    return d
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -83,7 +87,7 @@ test10(ClassOne())
 test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
 test12(np.array([1]))
 test13({"num": 1, "name": "steve"})
-
+test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 enforced(1, int)
 enforced([1], list[int])
 
