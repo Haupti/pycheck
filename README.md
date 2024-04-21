@@ -77,6 +77,8 @@ at the moment, the following types are supported:
 
 *note:*
 *ndarray follows the same rules as the list type*\
+*note:*
+*class-types are only checked by type-name, i.e. nominal typing*
 \
 here is an example how to use the class type:
 ```python
