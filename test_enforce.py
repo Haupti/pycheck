@@ -77,7 +77,6 @@ test8(lambda x: 1+x, 2)
 test9("hi")
 test10(ClassOne())
 test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
-print(type(np.array([1])[0]))
 test12(np.array([1]))
 
 enforced(1, int)
