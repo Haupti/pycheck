@@ -70,10 +70,14 @@ at the moment, the following types are supported:
 | union | union[int, float] | ... must be of either of type int or float |
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
 |  | list[str] | ... must be a list and all elements in this list must be of type str |
+|  | list | ... must be a list, contents are not checked (any-type) |
 | tuple[\<types\>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
 | \<class\> |  | ... must be an object the class in the annotation |
 | numpy.ndarray[\<types\>] | numpy.ndarray[numpy.int32] | ... must be an object type ndarray, all elements in the array must be of specified type numpy.int32 |
 
+*note:*
+*ndarray follows the same rules as the list type*\
+\
 here is an example how to use the class type:
 ```python
 class Person:
