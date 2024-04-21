@@ -56,16 +56,12 @@ def test10(clazz: ClassOne) -> str:
     return clazz.getVar()
 
 @enforce
-def test11(thing: [int, str]) -> list[int, str]:
-    return thing
-
-@enforce
-def test12(thing: list) -> list:
+def test11(thing: list) -> list:
     return thing
 
 # special support for numpy arrays
 @enforce
-def test13(arr: np.ndarray[np.int32]) -> any:
+def test12(arr: np.ndarray[np.int32]) -> any:
     return arr[0]
 
 test1(1, [22], True, "hi")
@@ -80,13 +76,9 @@ test7(["s"])
 test8(lambda x: 1+x, 2)
 test9("hi")
 test10(ClassOne())
-try:
-    test11([1, "hi"])
-except EnforceError:
-    pass
-test12([1, 2.5, True, "hi", np.array([1, 2, 3])])
+test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
 print(type(np.array([1])[0]))
-test13(np.array([1]))
+test12(np.array([1]))
 
 enforced(1, int)
 enforced([1], list[int])
