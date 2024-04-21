@@ -1,14 +1,5 @@
 import typing as Typing
 import types as Types
-"""docs
-
-# Rules
-
-* enforce expects every argument to be annotated, it will fail if there is no annotation.
-  if the type is to hard to figure out or something, you can set the type to 'any'
-
-* return values are always checked and expected, enforce will fail if there is no return type. you can set it to 'any' though
-"""
 
 # global flag to enable/disable typechecking by enforce
 _TYPECHECKING_ENABLED = True
