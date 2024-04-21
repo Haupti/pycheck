@@ -18,6 +18,15 @@ def my_function(a: int, b: str, c: list[int, float]) -> int:
 my_function(1, "wow", [1, 2.5, 3.8, 9])
 ```
 
+if you want to double check within your functions, you can use the `enforced` function:
+```python
+def my_other_function(a):
+    return enforced(a, int)
+
+# type checking will occur here:
+my_other_function(1)
+```
+
 ## general
 
 the decorator requires all function arguments to be typed.\
@@ -38,6 +47,7 @@ there is no typechecking of a function without the decorator.\
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |
 | function | type | alias for types.FunctionType (exported by the types module) |
+
 
 
 ## which types are supported
