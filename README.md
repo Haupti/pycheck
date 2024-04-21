@@ -58,16 +58,17 @@ enforce will not iterate over the lists, only check if the given object is, in f
 
 ## which types are supported
 at the moment, the following types are supported:
-| type | examples | the parameter annotated with this type... |
+| type | example type annotation | the parameter annotated with this type... |
 | --- | --- | --- |
-| int | 1, 2, 3 | ... must be of type int (bool is **not** treated as an int) |
-| float | 1.1, 2.2, 3.0 | ... must be of type float |
-| str | "wow" | ... must be of type str |
-| bool | True | ... must be of type bool (bool is **not** treated as an int) |
-| function | |  ... must be of type function (lambda or function, but **not** a class method) |
-| any | |  ...is not checked |
-| None | | ... must not be there or explicity None (works for return/no returns) |
+| int | int | ... must be of type int (bool is **not** treated as an int) |
+| float | float | ... must be of type float |
+| str | str | ... must be of type str |
+| bool | bool | ... must be of type bool (bool is **not** treated as an int) |
+| function | function |  ... must be of type function (lambda or function, but **not** a class method) |
+| any | any |  ...is not checked |
+| None | None | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |
+| dict | dict[{'count': int, 'scale':float}] | ... must be a dictionary containing keys 'count', pointing to an integer, and 'scale', pointing to a float |
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
 |  | list[str] | ... must be a list and all elements in this list must be of type str |
 |  | list | ... must be a list, contents are not checked (any-type) |
