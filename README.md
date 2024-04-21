@@ -1,4 +1,4 @@
-# enforce / pycheck
+# enforce
 
 the new version is called enforce.\
 its a very basic type checking lib. just copy the 'enforce.py' file in your project, import the 'enforce' decorator and there you go.\
