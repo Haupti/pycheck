@@ -20,6 +20,8 @@ my_function(1, "wow", [1, 2.5, 3.8, 9])
 
 if you want to double check within your functions, you can use the `enforced` function:
 ```python
+from enforce import enforced
+
 def my_other_function(a):
     return enforced(a, int)
 
@@ -67,12 +69,12 @@ at the moment, the following types are supported:
 | tuple[\<types\>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
 | \<class\> |  | ... must be an object the class in the annotation |
 
-for the class case here is another example:
+here is an example how to use the class type:
 ```python
 class Person:
     name = "steve"
 
-    @enfoce
+    @enforce
     def getMyName(self: any) -> str:
         return self.name
 
