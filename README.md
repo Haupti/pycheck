@@ -50,6 +50,10 @@ there is no typechecking of a function without the decorator.\
 | union | type | alias for typing.Union (exported by the typing module) |
 | function | type | alias for types.FunctionType (exported by the types module) |
 
+*note:*
+*disableing enforce for production should be a concideration, since it will make you code slower. especially if you are handling
+lists a lot. if you want enforce enabled in production, you can also simply not specify the type of the list you are handling, then 
+enforce will not iterate over the lists, only check if the given object is, in fact, a list.*
 
 
 ## which types are supported

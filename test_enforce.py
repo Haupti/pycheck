@@ -1,4 +1,5 @@
 from enforce import enforce, enforced, union, function, EnforceError
+import numpy as np
 
 #
 # to run the 'tests', run the file using the python interpreter
@@ -58,6 +59,15 @@ def test10(clazz: ClassOne) -> str:
 def test11(thing: [int, str]) -> list[int, str]:
     return thing
 
+@enforce
+def test12(thing: list) -> list:
+    return thing
+
+# special support for numpy arrays
+@enforce
+def test13(arr: np.ndarray[np.int32]) -> any:
+    return arr[0]
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -74,6 +84,10 @@ try:
     test11([1, "hi"])
 except EnforceError:
     pass
+test12([1, 2.5, True, "hi", np.array([1, 2, 3])])
+print(type(np.array([1])[0]))
+test13(np.array([1]))
 
 enforced(1, int)
 enforced([1], list[int])
+

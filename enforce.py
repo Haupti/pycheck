@@ -26,9 +26,10 @@ _TYPE_LIST = 6
 _TYPE_TUPLE = 7
 _TYPE_UNION = 8
 _TYPE_DICT = 9
-_TYPE_CLASS = 10 # TODO
-_TYPE_FUNCTION = 11 # TODO
+_TYPE_CLASS = 10
+_TYPE_FUNCTION = 11
 _TYPE_NONE = 12
+_TYPE_NDARRAY = 13
 
 class EnforceError(Exception):
     pass
@@ -66,7 +67,7 @@ _TYPECHECK_SUCCESS = (True, '')
 def __default_failure(enforce_value: EnforceValue) -> (bool, str):
     return (False, f"expected '{enforce_value.name}' to be of type '{enforce_value.expected_type.display_name}'")
 
-def __type_unknown_error(type_t):
+def __get_type_hint_for_error(type_t):
     err_hint = type_t
     try:
         if isinstance(type_t, list):
@@ -75,7 +76,15 @@ def __type_unknown_error(type_t):
             err_hint = __show_tuple([t.__name__ for t in type_t])
     except:
         pass
+    return err_hint
+
+def __type_unknown_error(type_t):
+    err_hint = __get_type_hint_for_error(type_t)
     raise EnforceError(f"_TYPE_UNKNOWN: type '{err_hint}' is not supported by enforce")
+
+def __type_invalid_error(type_t):
+    err_hint = __get_type_hint_for_error(type_t)
+    raise EnforceError(f"_TYPE_INVALID: type '{err_hint}' is not a valid type to be handled by enforce")
 
 def __type_unknown_failure(typename: str, argname: str) -> (bool, str):
     return (False, f"_TYPE_UNKNOWN: type '{typename}' of '{argname}' is not supported by enforce")
@@ -85,10 +94,16 @@ def __invalid_type_failure(type_t):
     try:
         if(isinstance(type_t, list) or isinstance(type_t, tuple)):
             typename = __show_list(type_t)
-    except: 
+    except:
         typename = type_t
     return (False, f"_TYPE_UNKNOWN: type '{typename}' is not supported by enforce")
 
+
+def __verify_valid_array_innertypes(list_type_args: list[EnforceType]) -> None:
+    if len(list_type_args) == 0:
+        return __type_invalid_error(type_t)
+    if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
+        return __type_invalid_error(type_t)
 
 #
 # type parsing functions
@@ -130,10 +145,25 @@ def __parse_type(type_t: any) -> EnforceType:
         case 'NoneType':
             return EnforceType(_TYPE_NONE, None, "None")
         case 'list':
+            if not hasattr(type_t, '__args__'): # inner type not specified
+                return EnforceType(_TYPE_LIST, [] , f"list[any]")
             list_type_args = list(type_t.__args__)
+
+            __verify_valid_array_innertypes(list_type_args)
+
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
             return EnforceType(_TYPE_LIST, inner_types, f"list{type_hint}")
+        case 'ndarray':
+            if not hasattr(type_t, '__args__'): # inner type not specified
+                return EnforceType(_TYPE_LIST, [] , f"ndarray[any]")
+            list_type_args = list(type_t.__args__)
+
+            __verify_valid_array_innertypes(list_type_args)
+
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
+            return EnforceType(_TYPE_NDARRAY, inner_types, f"ndarray{type_hint}")
         case 'tuple':
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
@@ -145,10 +175,7 @@ def __parse_type(type_t: any) -> EnforceType:
             type_hint = __show_list([inner_type.display_name for inner_type in inner_types])
             return EnforceType(_TYPE_UNION, inner_types, f"union{type_hint}")
         case _:
-            if hasattr(type_t, '__name__'):
-                classname = type_t.__name__
-                return EnforceType(_TYPE_CLASS, classname, classname)
-            return EnforceType(_TYPE_UNKNOWN, None, f"{type(type_t)}")
+            return EnforceType(_TYPE_CLASS, typename, typename)
 
 #
 # type verification functions
@@ -183,6 +210,17 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     elif(marker == _TYPE_LIST):
         if not isinstance(enforce_value.value, list):
             return __default_failure(enforce_value)
+        if len(enforce_value.expected_type.inner_type) == 0:
+            return _TYPECHECK_SUCCESS
+        for elem in enforce_value.value:
+            if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_NDARRAY):
+        if not (type(enforce_value.value).__name__ == 'ndarray'):
+            return __default_failure(enforce_value)
+        if len(enforce_value.expected_type.inner_type) == 0:
+            return _TYPECHECK_SUCCESS
         for elem in enforce_value.value:
             if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
                 return __default_failure(enforce_value)
