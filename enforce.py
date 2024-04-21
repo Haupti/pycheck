@@ -246,6 +246,12 @@ def __force(fn, args):
 union = Typing.Union
 function = Types.FunctionType
 
+def enforced(arg, type_t):
+    @enforce
+    def wrapper(value: type_t) -> any:
+        return value
+    return wrapper(arg)
+
 def enable_enforce():
     global _TYPECHECKING_ENABLED
     _TYPECHECKING_ENABLED = True

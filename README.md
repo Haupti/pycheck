@@ -33,6 +33,7 @@ there is no typechecking of a function without the decorator.\
 | export prop | type | description |
 | ----------- | ---- | ----------- |
 | enforce | decorator | runs typechecking on the input parameters and return value of the function it is decorating |
+| enforced | function | runs typechecking on the input parameter and then returns the value, raises TypeError if the type is not matched |
 | enable_enforce | function() -> None | enables typechecking globaly (default) |
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |

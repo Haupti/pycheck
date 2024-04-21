@@ -1,4 +1,4 @@
-from enforce import enforce, union, function, EnforceError
+from enforce import enforce, enforced, union, function, EnforceError
 
 #
 # to run the 'tests', run the file using the python interpreter
@@ -74,3 +74,6 @@ try:
     test11([1, "hi"])
 except EnforceError:
     pass
+
+enforced(1, int)
+enforced([1], list[int])
