@@ -36,6 +36,15 @@ class EnforceType:
         self.inner_type = inner
         self.display_name = name
 
+class EnforceFunctionType:
+    type_marker = _TYPE_FUNCTION
+    argument_types = [] # list of EnforceType
+    return_type = None # EnforceType
+    display_name = "function"
+    def __init__(self, argument_types, return_type):
+        self.argument_types = argument_types
+        self.return_type = return_type
+
 class EnforceLiteralType:
     type_marker = _TYPE_LITERAL # EnforceTypeEnum
     allowed_values = None # list of values. must be int, str, float, bool
@@ -64,9 +73,9 @@ class EnforceValue:
 #
 # utilities
 #
-_NOSTR = ''
+_NOSTR = ""
 
-_TYPECHECK_SUCCESS = (True, '')
+_TYPECHECK_SUCCESS = (True, _NOSTR)
 
 def __is_of_primitive_type(val: any) -> bool:
     return (isinstance(val, int) | isinstance(val, bool) | isinstance(val, float) | isinstance(val, str))
@@ -83,22 +92,22 @@ def __show_key_name(key_name):
 
 def __show_actual_type(value: any) -> str:
     type_name = type(value).__name__
-    if(type_name == 'list'):
+    if(type_name == "list"):
         type_set = set()
         [type_set.add(__show_actual_type(elem)) for elem in value]
         types_representation = ", ".join(map(str, type_set))
         return f"list[{types_representation}]"
-    if(type_name == 'set'):
+    if(type_name == "set"):
         type_set = set()
         [type_set.add(__show_actual_type(elem)) for elem in value]
         types_representation = ", ".join(map(str, type_set))
         return f"set[{types_representation}]"
-    if(type_name == 'ndarray'):
+    if(type_name == "ndarray"):
         return f"numpy.ndarray[numpy.{value.dtype}]"
-    if(type_name == 'tuple'):
+    if(type_name == "tuple"):
         types_representation = ", ".join(map(str,[__show_actual_type(elem) for elem in value]))
         return f"tuple({types_representation})"
-    if(type_name == 'dict'):
+    if(type_name == "dict"):
         types_representation = ", ".join(map(str,[f"{__show_key_name(elem[0])}: {__show_actual_type(elem[1])}" for elem in value.items()]))
         return "dict{" + types_representation + "}"
     if(type_name == "NoneType"):
@@ -162,12 +171,12 @@ def __get_verified_dict_innertype(type_t):
     if len(list_type_args) != 1:
         raise __type_invalid_error(type_t)
     type_arg = list_type_args[0]
-    if type(type_arg).__name__ != 'dict':
+    if type(type_arg).__name__ != "dict":
         raise __type_invalid_error(type_t)
     return type_arg
 
 def __verify_valid_type_innertypes(list_type_args, typename):
-    if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
+    if any([list_type_arg.__name__ == "any" for list_type_arg in list_type_args]):
         raise __type_invalid_error(f"{typename}[any]")
     if len(list_type_args) == 0:
         raise __type_invalid_error(list_type_args)
@@ -186,7 +195,7 @@ def __verify_valid_ndarray_innertypes(list_type_args):
 #
 def __parse_types(names: list[str], args: list[any], types: dict) -> list[EnforceValue]:
     if len(names) != len(args):
-        return []
+        return [] # this will typecheck, since there is nothing to check. but the evaluation will fail. python itself makes sure...
     if len(names) > len(types):
         raise TypeError("all function arguments are required to have type annotations.")
 
@@ -199,29 +208,36 @@ def __parse_types(names: list[str], args: list[any], types: dict) -> list[Enforc
 
     return enforce_values
 
-def __parse_type(type_t: any) -> EnforceType:
+def __parse_type(type_t: any): # union[EnforceType, EnforceFunctionType, EnforceDictEntryType, EnforceLiteralType]:
     typename = None
-    if not hasattr(type_t, '__name__'):
+    if not hasattr(type_t, "__name__"):
         raise __type_unknown_error(type_t)
     else:
         typename = type_t.__name__
     match typename:
-        case 'int':
+        case "int":
             return EnforceType(_TYPE_INT, None, "int")
-        case 'float':
+        case "float":
             return EnforceType(_TYPE_FLOAT, None, "float")
-        case 'bool':
+        case "bool":
             return EnforceType(_TYPE_BOOL, None, "bool")
-        case 'str':
+        case "str":
             return EnforceType(_TYPE_STR, None, "str")
-        case 'any':
+        case "any":
             return EnforceType(_TYPE_ANY, None, "any")
-        case 'function':
-            return EnforceType(_TYPE_FUNCTION, None, "function")
-        case 'NoneType':
+        case "Callable":
+            if not hasattr(type_t, "__args__"):
+                return EnforceFunctionType([], None)
+            list_type_args = type_t.__args__
+            if len(list_type_args) == 0:
+                raise EnforceError("_INVALID_TYPE: function type must have no specifications on type or at least have the return type declaration.")
+            argument_types = [__parse_type(t) for t in list_type_args[:-1]]
+            return_type = __parse_type(list_type_args[-1])
+            return EnforceFunctionType(argument_types, return_type)
+        case "NoneType":
             return EnforceType(_TYPE_NONE, None, "None")
-        case 'list':
-            if not hasattr(type_t, '__args__'): # inner type not specified
+        case "list":
+            if not hasattr(type_t, "__args__"): # inner type not specified
                 return EnforceType(_TYPE_LIST, [] , "list")
             list_type_args = list(type_t.__args__)
 
@@ -229,8 +245,8 @@ def __parse_type(type_t: any) -> EnforceType:
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_LIST, inner_types, "list")
-        case 'ndarray':
-            if not hasattr(type_t, '__args__'): # inner type not specified
+        case "ndarray":
+            if not hasattr(type_t, "__args__"): # inner type not specified
                 return EnforceType(_TYPE_NDARRAY, [] , "ndarray")
             list_type_args = list(type_t.__args__)
             if len(list_type_args) > 1:
@@ -240,24 +256,24 @@ def __parse_type(type_t: any) -> EnforceType:
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_NDARRAY, inner_types, "ndarray")
-        case 'tuple':
+        case "tuple":
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_TUPLE, inner_types, "tuple")
-        case 'Union':
+        case "Union":
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_UNION, inner_types, "union")
-        case 'dict':
-            if not hasattr(type_t, '__args__'):
+        case "dict":
+            if not hasattr(type_t, "__args__"):
                 return EnforceType(_TYPE_DICT, None, "dict")
             type_arg = __get_verified_dict_innertype(type_t)
             dict_entries = []
             for key, value in type_arg.items():
                 dict_entries.append(EnforceDictEntryType(__parse_type(value), key))
             return EnforceType(_TYPE_DICT, dict_entries, "dict")
-        case 'set':
-            if not hasattr(type_t, '__args__'):
+        case "set":
+            if not hasattr(type_t, "__args__"):
                 return EnforceType(_TYPE_SET, None, "set")
             list_type_args = list(type_t.__args__)
 
@@ -265,12 +281,12 @@ def __parse_type(type_t: any) -> EnforceType:
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_SET, inner_types, "set")
-        case 'Literal':
+        case "Literal":
             if not hasattr(type_t, "__args__"):
-                raise EnforceError("'literal' type must have arguments")
+                raise EnforceError("_INVALID_TYPE: 'literal' type must have arguments")
             list_type_args = type_t.__args__
             if not all([__is_of_primitive_type(it) for it in list_type_args]):
-                raise EnforceError("'literal' type arguments must be values of type 'int', 'float', 'str' or 'bool'. no type arguments of type 'type' are allowed.")
+                raise EnforceError("_INVALID_TYPE: 'literal' type arguments must be values of type 'int', 'float', 'str' or 'bool'. no type arguments of type 'type' are allowed.")
             return EnforceLiteralType(list_type_args,"literal")
         case _:
             if not hasattr(type_t, "__args__"):
@@ -318,7 +334,7 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
                 return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_NDARRAY):
-        if not (type(enforce_value.value).__name__ == 'ndarray'):
+        if not (type(enforce_value.value).__name__ == "ndarray"):
             return __default_failure(enforce_value)
         if len(enforce_value.expected_type.inner_type) == 0:
             return _TYPECHECK_SUCCESS
@@ -339,6 +355,20 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     elif(marker == _TYPE_FUNCTION):
         if not isinstance(enforce_value.value, function):
             return __default_failure(enforce_value)
+        ts = Typing.get_type_hints(enforce_value.value)
+        keys = list(ts.keys())
+        keys.remove("return")
+        fn_arg_type = Typing.Callable[[ts[key] for key in keys],ts["return"]]
+        parsed_type_fn_arg = __parse_type(fn_arg_type)
+        print( parsed_type_fn_arg.return_type.type_marker)
+        print( enforce_value.expected_type.return_type.type_marker)
+        if not parsed_type_fn_arg.return_type.type_marker == enforce_value.expected_type.return_type.type_marker:
+            return __default_failure(enforce_value)
+        print("here")
+        [print("her", a.display_name, e.display_name) for a, e in zip(parsed_type_fn_arg.argument_types, enforce_value.expected_type.argument_types)]
+        if not all([a.display_name == e.display_name for a, e in zip(parsed_type_fn_arg.argument_types, enforce_value.expected_type.argument_types)]):
+            return __default_failure(enforce_value)
+
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_CLASS):
         if not enforce_value.value.__class__.__name__ == enforce_value.expected_type.inner_type:
@@ -381,9 +411,9 @@ def __force(fn, args):
     types = Typing.get_type_hints(fn)
 
     # check if return type is not specified
-    if(not 'return' in types.keys()):
+    if(not "return" in types.keys()):
         raise TypeError("enforce expects a return type to be specified")
-    return_type = types['return'] # required at the end
+    return_type = types["return"] # required at the end
 
     # checking argument types
     types.pop("return") # cannot be in the dict for the next step
@@ -392,7 +422,7 @@ def __force(fn, args):
 
     # checking return type
     return_value = fn(*args)
-    enforce_return_value = EnforceValue(return_value, 'return', __parse_type(return_type))
+    enforce_return_value = EnforceValue(return_value, "return", __parse_type(return_type))
     __enforce_types([enforce_return_value])
 
     # return function result
@@ -404,7 +434,7 @@ def __force(fn, args):
 #
 
 union = Typing.Union
-function = Types.FunctionType
+function = Typing.Callable
 literal = Typing.Literal
 
 def enforced(arg, type_t):
@@ -428,4 +458,5 @@ def enforce(fn):
             return __force(fn, args)
         else:
             return fn(*args)
+    wrapper.__annotations__ = Typing.get_type_hints(fn)
     return wrapper

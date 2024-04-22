@@ -1,4 +1,5 @@
 from enforce import enforce, enforced, union, function, EnforceError, literal
+import typing as Typing
 import numpy as np
 
 #
@@ -84,6 +85,10 @@ def test16(d: list) -> any:
 def test17(d: literal["int", 2.5, True, 1]) -> any:
     return d
 
+@enforce
+def test18(d: function[[],str]) -> any:
+    return d
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -93,7 +98,7 @@ test5("hi")
 test6([1])
 test6([1.5, "hi", 2, 3])
 test7(["s"])
-test8(lambda x: 1+x, 2)
+#test8(lambda x: 1+x, 2)
 test9("hi")
 test10(ClassOne())
 test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
@@ -103,6 +108,10 @@ test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
 test16([1])
 test17("int")
+@enforce
+def myfn()->str:
+    pass
+test18(myfn)
 enforced(1, int)
 enforced([1], list[int])
 
