@@ -72,12 +72,13 @@ at the moment, the following types are supported:
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
 |  | list[str] | ... must be a list and all elements in this list must be of type str |
 |  | list | ... must be a list, contents are not checked (any-type) |
+| set[\<types\>] | set[int, float] | ... must be a set and all elements must be either of type int or of type float |
 | tuple[\<types\>] | tuple[str, int] | ... must be a tuple and all elements in the given tuple must be of the types hinted (in order) |
 | \<class\> |  | ... must be an object the class in the annotation |
 | numpy.ndarray[\<types\>] | numpy.ndarray[numpy.int32] | ... must be an object type ndarray, all elements in the array must be of specified type numpy.int32 |
 
 *note:*
-*ndarray follows the same rules as the list type*\
+*ndarray and sets follows the same rules as the list type*\
 *note:*
 *class-types are only checked by type-name, i.e. nominal typing*
 \
