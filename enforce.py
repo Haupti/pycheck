@@ -150,11 +150,20 @@ def __get_verified_dict_innertype(type_t):
         raise __type_invalid_error(type_t)
     return type_arg
 
-def __verify_valid_array_innertypes(list_type_args):
-    if len(list_type_args) == 0:
-        raise __type_invalid_error(type_t)
+def __verify_valid_type_innertypes(list_type_args, typename):
     if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
-        raise __type_invalid_error(type_t)
+        raise __type_invalid_error(f"{typename}[any]")
+    if len(list_type_args) == 0:
+        raise __type_invalid_error(list_type_args)
+
+def __verify_valid_list_innertypes(list_type_args):
+    __verify_valid_type_innertypes(list_type_args, "list")
+
+def __verify_valid_set_innertypes(list_type_args):
+    __verify_valid_type_innertypes(list_type_args, "set")
+
+def __verify_valid_ndarray_innertypes(list_type_args):
+    __verify_valid_type_innertypes(list_type_args, "ndarray")
 
 #
 # type parsing functions
@@ -202,7 +211,7 @@ def __parse_type(type_t: any) -> EnforceType:
                 return EnforceType(_TYPE_LIST, [] , "list")
             list_type_args = list(type_t.__args__)
 
-            __verify_valid_array_innertypes(list_type_args)
+            __verify_valid_list_innertypes(list_type_args)
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_LIST, inner_types, "list")
@@ -210,8 +219,10 @@ def __parse_type(type_t: any) -> EnforceType:
             if not hasattr(type_t, '__args__'): # inner type not specified
                 return EnforceType(_TYPE_NDARRAY, [] , "ndarray")
             list_type_args = list(type_t.__args__)
+            if len(list_type_args) > 1:
+                raise EnforceError(f"_TYPE_INVALID: ndarray can only contain values of a single type")
 
-            __verify_valid_array_innertypes(list_type_args)
+            __verify_valid_ndarray_innertypes(list_type_args)
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_NDARRAY, inner_types, "ndarray")
@@ -236,7 +247,7 @@ def __parse_type(type_t: any) -> EnforceType:
                 return EnforceType(_TYPE_SET, None, "set")
             list_type_args = list(type_t.__args__)
 
-            __verify_valid_array_innertypes(list_type_args)
+            __verify_valid_set_innertypes(list_type_args)
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_SET, inner_types, "set")
@@ -290,8 +301,7 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
             return __default_failure(enforce_value)
         if len(enforce_value.expected_type.inner_type) == 0:
             return _TYPECHECK_SUCCESS
-        for elem in enforce_value.value:
-            if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
+        if not str(enforce_value.value.dtype) == enforce_value.expected_type.inner_type[0].display_name:
                 return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     elif(marker == _TYPE_TUPLE):
