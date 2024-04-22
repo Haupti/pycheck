@@ -67,6 +67,26 @@ def __show_key_name(key_name):
     if isinstance(key_name, str):
         return f'"{key_name}"'
 
+def __show_actual_type(value: any) -> str:
+    type_name = type(value).__name__
+    if(type_name == 'list'):
+        type_set = set()
+        [type_set.add(__show_actual_type(elem)) for elem in value]
+        types_representation = ", ".join(map(str, type_set))
+        return f"list[{types_representation}]"
+    if(type_name == 'ndarray'):
+        return f"numpy.ndarray[numpy.{value.dtype}]"
+    if(type_name == 'tuple'):
+        types_representation = ", ".join(map(str,[__show_actual_type(elem) for elem in value]))
+        return f"tuple({types_representation})"
+    if(type_name == 'dict'):
+        types_representation = ", ".join(map(str,[f"{__show_key_name(elem[0])}: {__show_actual_type(elem[1])}" for elem in value.items()]))
+        return "dict{" + types_representation + "}"
+    if(type_name == "NoneType"):
+        return "None"
+
+    return type_name
+
 def __create_error_type_hint(e):
     expected_type = None
     if isinstance(e, EnforceValue):
@@ -210,7 +230,8 @@ def __enforce_types(enforce_values: list[EnforceValue]) -> None:
     for enforce_value in enforce_values:
         is_success, msg = __enforce_type(enforce_value)
         if not is_success:
-            raise TypeError(msg)
+            actual_type = __show_actual_type(enforce_value.value)
+            raise TypeError(msg + " but actual was '" + actual_type + "'")
 
 def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     marker = enforce_value.expected_type.type_marker
@@ -312,7 +333,6 @@ def __force(fn, args):
     return return_value
 
 
-# TODO mechanism that determines a visual representation the ACTUAL type in case of failure
 #
 # exposed
 #
