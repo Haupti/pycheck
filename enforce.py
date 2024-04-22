@@ -350,7 +350,7 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     raise EnforceError("there might be a bug in here, please report.")
 
 #general strategy is to fail as fast as possible
-#-> return type check is done first, because then nothing else has to be done, if this fails
+#-> return type check is done first, because if this fails, then nothing else has to be done
 def __force(fn, args):
     names = fn.__code__.co_varnames
     types = Typing.get_type_hints(fn)

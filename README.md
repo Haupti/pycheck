@@ -78,7 +78,9 @@ at the moment, the following types are supported:
 | numpy.ndarray[\<types\>] | numpy.ndarray[numpy.int32] | ... must be an object type ndarray, all elements in the array must be of specified type numpy.int32 |
 
 *note:*
-*ndarray and sets follows the same rules as the list type*\
+*sets follows the same rules as the list type*\
+*numpy arrays (ndarray) follows almost the same rules as the list type, except that it can only contain one type.\
+this is because ndarrays also can only contain one type*\
 *note:*
 *class-types are only checked by type-name, i.e. nominal typing*
 \
