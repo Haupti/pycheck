@@ -49,6 +49,7 @@ there is no typechecking of a function without the decorator.\
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |
 | function | type | alias for types.FunctionType (exported by the types module) |
+| literal | type | alias for typing.Literal (exported by the typing module) |
 
 *note:*
 *disableing enforce for production should be a concideration, since it will make you code slower. especially if you are handling
@@ -68,6 +69,7 @@ at the moment, the following types are supported:
 | any | any |  ...is not checked |
 | None | None | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |
+| literal | literal["mark", 2.5] | ... must be of either the value "mark" or the value 2.5 |
 | dict | dict[{'count': int, 'scale':float}] | ... must be a dictionary containing keys 'count', pointing to an integer, and 'scale', pointing to a float |
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
 |  | list[str] | ... must be a list and all elements in this list must be of type str |

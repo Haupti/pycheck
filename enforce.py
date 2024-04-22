@@ -22,6 +22,7 @@ _TYPE_FUNCTION = 11
 _TYPE_NONE = 12
 _TYPE_NDARRAY = 13
 _TYPE_SET = 14
+_TYPE_LITERAL = 15
 
 class EnforceError(Exception):
     pass
@@ -33,6 +34,14 @@ class EnforceType:
     def __init__(self, marker, inner, name):
         self.type_marker = marker
         self.inner_type = inner
+        self.display_name = name
+
+class EnforceLiteralType:
+    type_marker = _TYPE_LITERAL # EnforceTypeEnum
+    allowed_values = None # list of values. must be int, str, float, bool
+    display_name = "" # str
+    def __init__(self, allowed_values, name):
+        self.allowed_values = allowed_values
         self.display_name = name
 
 class EnforceDictEntryType:
@@ -51,12 +60,16 @@ class EnforceValue:
         self.name = n
         self.expected_type = e
 
+
 #
 # utilities
 #
 _NOSTR = ''
 
 _TYPECHECK_SUCCESS = (True, '')
+
+def __is_of_primitive_type(val: any) -> bool:
+    return (isinstance(val, int) | isinstance(val, bool) | isinstance(val, float) | isinstance(val, str))
 
 def __show_key_name(key_name):
     if isinstance(key_name, int):
@@ -127,6 +140,9 @@ def __create_error_type_hint(e):
         case "dict":
             inner_type_hints = ", ".join(map(str,[f"{__show_key_name(t.key_name)}: {__create_error_type_hint(t.enforce_type)}" for t in expected_type.inner_type]))
             return f"dict[{inner_type_hints}]"
+        case "literal":
+            inner_type_hints = ", ".join(map(__show_key_name, expected_type.allowed_values))
+            return f"literal[{inner_type_hints}]"
         case _ :
             return f"{expected_type.display_name}"
 
@@ -249,6 +265,13 @@ def __parse_type(type_t: any) -> EnforceType:
 
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_SET, inner_types, "set")
+        case 'Literal':
+            if not hasattr(type_t, "__args__"):
+                raise EnforceError("'literal' type must have arguments")
+            list_type_args = type_t.__args__
+            if not all([__is_of_primitive_type(it) for it in list_type_args]):
+                raise EnforceError("'literal' type arguments must be values of type 'int', 'float', 'str' or 'bool'. no type arguments of type 'type' are allowed.")
+            return EnforceLiteralType(list_type_args,"literal")
         case _:
             if not hasattr(type_t, "__args__"):
                 return EnforceType(_TYPE_CLASS, typename, typename)
@@ -345,6 +368,10 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
             if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
                 return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_LITERAL):
+        if not any([enforce_value.value == literal_value for literal_value in enforce_value.expected_type.allowed_values]):
+            return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
     raise EnforceError("there might be a bug in here, please report.")
 
 #general strategy is to fail as fast as possible
@@ -378,6 +405,7 @@ def __force(fn, args):
 
 union = Typing.Union
 function = Types.FunctionType
+literal = Typing.Literal
 
 def enforced(arg, type_t):
     @enforce

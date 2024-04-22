@@ -1,4 +1,4 @@
-from enforce import enforce, enforced, union, function, EnforceError
+from enforce import enforce, enforced, union, function, EnforceError, literal
 import numpy as np
 
 #
@@ -80,6 +80,10 @@ def test15(d: set[str, int]) -> any:
 def test16(d: list) -> any:
     return d
 
+@enforce
+def test17(d: literal["int", 2.5, True, 1]) -> any:
+    return d
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -98,6 +102,7 @@ test13({"num": 1, "name": "steve"})
 test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
 test16([1])
+test17("int")
 enforced(1, int)
 enforced([1], list[int])
 
