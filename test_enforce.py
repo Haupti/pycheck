@@ -102,7 +102,7 @@ test13({"num": 1, "name": "steve"})
 test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
 test16([1])
-test17("nt")
+test17("int")
 enforced(1, int)
 enforced([1], list[int])
 
