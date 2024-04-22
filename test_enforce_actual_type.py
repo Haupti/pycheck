@@ -12,6 +12,9 @@ class MyClass:
     def what(self):
         pass
 
+def somefunc():
+    pass
+
 expect(__show_actual_type(1), "int")
 expect(__show_actual_type("hi mark"), "str")
 expect(__show_actual_type(6.2), "float")
@@ -23,4 +26,7 @@ expect(__show_actual_type((1,2, "hi", 2.5, MyClass())), "tuple(int, int, str, fl
 expect(__show_actual_type({"hi": "mark", 1: True, 2.5: "yes", "steve": "is cool"}), 'dict{"hi": str, 1: bool, 2.5: str, "steve": str}')
 expect(__show_actual_type(None), "None")
 expect(__show_actual_type(lambda x: x), "function")
+expect(__show_actual_type(somefunc), "function")
 expect(__show_actual_type(MyClass().what), "method")
+
+

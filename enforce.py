@@ -21,6 +21,7 @@ _TYPE_CLASS = 10
 _TYPE_FUNCTION = 11
 _TYPE_NONE = 12
 _TYPE_NDARRAY = 13
+_TYPE_SET = 14
 
 class EnforceError(Exception):
     pass
@@ -74,6 +75,11 @@ def __show_actual_type(value: any) -> str:
         [type_set.add(__show_actual_type(elem)) for elem in value]
         types_representation = ", ".join(map(str, type_set))
         return f"list[{types_representation}]"
+    if(type_name == 'set'):
+        type_set = set()
+        [type_set.add(__show_actual_type(elem)) for elem in value]
+        types_representation = ", ".join(map(str, type_set))
+        return f"set[{types_representation}]"
     if(type_name == 'ndarray'):
         return f"numpy.ndarray[numpy.{value.dtype}]"
     if(type_name == 'tuple'):
@@ -105,6 +111,11 @@ def __create_error_type_hint(e):
             if len(inner_type_hints) == 0:
                 return "list"
             return f"list[{inner_type_hints}]"
+        case "set":
+            inner_type_hints = ", ".join(map(str,[__create_error_type_hint(t) for t in expected_type.inner_type]))
+            if len(inner_type_hints) == 0:
+                return "set"
+            return f"set[{inner_type_hints}]"
         case "ndarray":
             inner_type_hints = ", ".join(map(str,[__create_error_type_hint(t) for t in expected_type.inner_type]))
             if len(inner_type_hints) == 0:
@@ -139,7 +150,7 @@ def __get_verified_dict_innertype(type_t):
         raise __type_invalid_error(type_t)
     return type_arg
 
-def __verify_valid_array_innertypes(list_type_args: list[EnforceType]) -> None:
+def __verify_valid_array_innertypes(list_type_args):
     if len(list_type_args) == 0:
         raise __type_invalid_error(type_t)
     if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
@@ -220,8 +231,19 @@ def __parse_type(type_t: any) -> EnforceType:
             for key, value in type_arg.items():
                 dict_entries.append(EnforceDictEntryType(__parse_type(value), key))
             return EnforceType(_TYPE_DICT, dict_entries, "dict")
+        case 'set':
+            if not hasattr(type_t, '__args__'):
+                return EnforceType(_TYPE_SET, None, "set")
+            list_type_args = list(type_t.__args__)
+
+            __verify_valid_array_innertypes(list_type_args)
+
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            return EnforceType(_TYPE_SET, inner_types, "set")
         case _:
-            return EnforceType(_TYPE_CLASS, typename, typename)
+            if not hasattr(type_t, "__args__"):
+                return EnforceType(_TYPE_CLASS, typename, typename)
+            raise __type_invalid_error(type_t)
 
 #
 # type verification functions
@@ -304,6 +326,15 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
             if enforce_value.value.get(dict_entry_e.key_name) is None:
                 return __default_failure(enforce_value)
             if not __enforce_type(EnforceValue(enforce_value.value[dict_entry_e.key_name], _NOSTR, dict_entry_e.enforce_type))[0]:
+                return __default_failure(enforce_value)
+        return _TYPECHECK_SUCCESS
+    elif(marker == _TYPE_SET):
+        if not isinstance(enforce_value.value, set):
+            return __default_failure(enforce_value)
+        if len(enforce_value.expected_type.inner_type) == 0:
+            return _TYPECHECK_SUCCESS
+        for elem in enforce_value.value:
+            if not any([__enforce_type(EnforceValue(elem, _NOSTR, type_e))[0] for type_e in enforce_value.expected_type.inner_type]):
                 return __default_failure(enforce_value)
         return _TYPECHECK_SUCCESS
     raise EnforceError("there might be a bug in here, please report.")

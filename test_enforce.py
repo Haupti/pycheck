@@ -72,6 +72,11 @@ def test13(d: dict[{"num": int, "name": str}]) -> any:
 def test14(d: dict[{1: int, 2: list[int], "oh hi": dict[{"greet": str}]}]) -> any:
     return d
 
+@enforce
+def test15(d: set[str, int]) -> any:
+    return d
+
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -88,6 +93,7 @@ test11([1, 2.5, True, "hi", np.array([1, 2, 3])])
 test12(np.array([1]))
 test13({"num": 1, "name": "steve"})
 test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
+test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
 enforced(1, int)
 enforced([1], list[int])
 
