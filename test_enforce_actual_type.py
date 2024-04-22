@@ -29,4 +29,3 @@ expect(__show_actual_type(lambda x: x), "function")
 expect(__show_actual_type(somefunc), "function")
 expect(__show_actual_type(MyClass().what), "method")
 
-

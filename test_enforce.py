@@ -80,7 +80,6 @@ def test15(d: set[str, int]) -> any:
 def test16(d: list) -> any:
     return d
 
-
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))

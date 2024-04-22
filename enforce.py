@@ -5,7 +5,7 @@ import types as Types
 _TYPECHECKING_ENABLED = True
 
 
-# zero overhead 'enum'
+# zero overhead'enum'
 # EnforceTypeEnum
 _TYPE_UNKNOWN = 0
 _TYPE_ANY = 1
@@ -190,8 +190,6 @@ def __parse_type(type_t: any) -> EnforceType:
     else:
         typename = type_t.__name__
     match typename:
-        # union
-        # class
         case 'int':
             return EnforceType(_TYPE_INT, None, "int")
         case 'float':
@@ -350,7 +348,7 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
     raise EnforceError("there might be a bug in here, please report.")
 
 #general strategy is to fail as fast as possible
-#-> return type check is done first, because if this fails, then nothing else has to be done
+#-> return type check is done first, because if this fails, then nothing else has to be done.
 def __force(fn, args):
     names = fn.__code__.co_varnames
     types = Typing.get_type_hints(fn)
