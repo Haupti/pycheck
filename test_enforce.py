@@ -70,6 +70,7 @@ def test13(d: dict[{"num": int, "name": str}]) -> any:
 
 @enforce
 def test14(d: dict[{1: int, 2: list[int], "oh hi": dict[{"greet": str}]}]) -> any:
+    some = "saaa"
     return d
 
 @enforce
@@ -77,7 +78,12 @@ def test15(d: set[str, int]) -> any:
     return d
 
 @enforce
-def test16(d: list[int], y:int ,something: int = 1, something_else: str = "hi") -> None:
+def test16(d: list[int], y:int ,something: int = 1, something_else: str = "hi") -> str:
+    listings = d
+    for i, e in enumerate(listings):
+        listings[i] = e
+    return something_else
+
 
 @enforce
 def test17(d: literal["int", 2.5, True, 1]) -> any:
