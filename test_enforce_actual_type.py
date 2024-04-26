@@ -1,12 +1,6 @@
 from enforce import __show_actual_type
+from test_expect import expect
 import numpy as np
-
-
-def expect(actual, expected):
-    if actual == expected:
-        print("\x1b[2;36msuccess\x1b[2;0m")
-    else:
-        print(f"\x1b[2;31mFAILURE: expected '{actual}' to be '{expected}'\x1b[2;0m")
 
 class MyClass:
     def what(self):

@@ -77,8 +77,7 @@ def test15(d: set[str, int]) -> any:
     return d
 
 @enforce
-def test16(d: list) -> any:
-    return d
+def test16(d: list[int], y:int ,something: int = 1, something_else: str = "hi") -> None:
 
 @enforce
 def test17(d: literal["int", 2.5, True, 1]) -> any:
@@ -101,7 +100,7 @@ test12(np.array([1]))
 test13({"num": 1, "name": "steve"})
 test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
-test16([1])
+test16([1], 1, something_else="LOL")
 test17("int")
 enforced(1, int)
 enforced([1], list[int])

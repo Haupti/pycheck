@@ -184,18 +184,26 @@ def __verify_valid_ndarray_innertypes(list_type_args):
 #
 # type parsing functions
 #
-def __parse_types(names: list[str], args: list[any], types: dict) -> list[EnforceValue]:
-    if len(names) != len(args):
-        return []
-    if len(names) > len(types):
+def __parse_types(args: list[any], kwargs: dict, defaults: any, types: dict) -> list[EnforceValue]:
+    defaults_len = 0
+    if not defaults is None:
+        defaults_len = len(defaults)
+
+    if (len(args) + defaults_len != len(types)):
         raise TypeError("all function arguments are required to have type annotations.")
 
-    # build enforce values
     enforce_values = []
-    for (name, arg) in zip(names, args):
-        type_t = types[name]
-        enforce_type = __parse_type(type_t)
-        enforce_values.append(EnforceValue(arg, name, enforce_type))
+    for i, (name, type_t) in enumerate(types.items()):
+        if i < len(args):
+            ev = EnforceValue(args[i], name,__parse_type(type_t))
+            enforce_values.append(ev)
+        else:
+            if name in kwargs.keys():
+                ev = EnforceValue(kwargs[name], name, __parse_type(type_t))
+                enforce_values.append(ev)
+            else:
+                ev = EnforceValue(defaults[i-(len(types.items()) - len(defaults))],name , __parse_type(type_t))
+                enforce_values.append(ev)
 
     return enforce_values
 
@@ -376,7 +384,7 @@ def __enforce_type(enforce_value: EnforceValue) -> (bool, str):
 
 #general strategy is to fail as fast as possible
 #-> return type check is done first, because if this fails, then nothing else has to be done.
-def __force(fn, args):
+def __force(fn, args, kwargs):
     names = fn.__code__.co_varnames
     types = Typing.get_type_hints(fn)
 
@@ -387,11 +395,11 @@ def __force(fn, args):
 
     # checking argument types
     types.pop("return") # cannot be in the dict for the next step
-    enforce_values = __parse_types(names, args, types)
+    enforce_values = __parse_types(args, kwargs, fn.__defaults__, types)
     __enforce_types(enforce_values)
 
     # checking return type
-    return_value = fn(*args)
+    return_value = fn(*args, **kwargs)
     enforce_return_value = EnforceValue(return_value, 'return', __parse_type(return_type))
     __enforce_types([enforce_return_value])
 
@@ -422,10 +430,10 @@ def disable_enforce():
     _TYPECHECKING_ENABLED = False
 
 def enforce(fn):
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         global _TYPECHECKING_ENABLED
         if(_TYPECHECKING_ENABLED):
-            return __force(fn, args)
+            return __force(fn, args, kwargs)
         else:
             return fn(*args)
     return wrapper
