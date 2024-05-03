@@ -419,6 +419,7 @@ def __force(fn, args, kwargs):
 #
 
 union = Typing.Union
+optional = Typing.Optional
 function = Types.FunctionType
 literal = Typing.Literal
 
