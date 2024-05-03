@@ -89,6 +89,18 @@ def test16(d: list[int], y:int ,something: int = 1, something_else: str = "hi") 
 def test17(d: literal["int", 2.5, True, 1]) -> any:
     return d
 
+@enforce
+def test18(d: union[int, float]) -> any:
+    return d
+
+@enforce
+def test19(d: list[int, None]) -> any:
+    return d
+
+@enforce
+def test20(d: union[int, None]=None) -> any:
+    return d
+
 test1(1, [22], True, "hi")
 test2([(1,2.2), "hi", "hallo", (1, 5.5), "steve"])
 test3((1,2.2))
@@ -108,6 +120,9 @@ test14({1: 2, 2: [1,2,3], "oh hi": {"greet": "mark"}})
 test15({1,True,2,"hi"}) # funny: this does not fail because True == 1 and the set already contains 1....
 test16([1], 1, something_else="LOL")
 test17("int")
+test18(1)
+test19([1, None])
+test20(d=1)
 enforced(1, int)
 enforced([1], list[int])
 

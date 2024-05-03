@@ -82,6 +82,8 @@ def __show_key_name(key_name):
         return f'"{key_name}"'
 
 def __show_actual_type(value: any) -> str:
+    if(value is None):
+        return "None"
     type_name = type(value).__name__
     if(type_name == 'list'):
         type_set = set()
@@ -167,7 +169,7 @@ def __get_verified_dict_innertype(type_t):
     return type_arg
 
 def __verify_valid_type_innertypes(list_type_args, typename):
-    if any([list_type_arg.__name__ == 'any' for list_type_arg in list_type_args]):
+    if any([(list_type_arg or type(None)).__name__ == 'any' for list_type_arg in list_type_args]):
         raise __type_invalid_error(f"{typename}[any]")
     if len(list_type_args) == 0:
         raise __type_invalid_error(list_type_args)
@@ -209,7 +211,9 @@ def __parse_types(args: list[any], kwargs: dict, defaults: any, types: dict) -> 
 
 def __parse_type(type_t: any) -> EnforceType:
     typename = None
-    if not hasattr(type_t, '__name__'):
+    if(type_t is None):
+        return EnforceType(_TYPE_NONE, None, "None")
+    elif not hasattr(type_t, '__name__'):
         raise __type_unknown_error(type_t)
     else:
         typename = type_t.__name__
@@ -252,6 +256,11 @@ def __parse_type(type_t: any) -> EnforceType:
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
             return EnforceType(_TYPE_TUPLE, inner_types, "tuple")
+        case 'Optional':
+            list_type_args = list(type_t.__args__)
+            inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
+            inner_types.append(EnforceType(_TYPE_NONE, None, "None"))
+            return EnforceType(_TYPE_UNION, inner_types, "union")
         case 'Union':
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
@@ -281,9 +290,7 @@ def __parse_type(type_t: any) -> EnforceType:
                 raise EnforceError("'literal' type arguments must be values of type 'int', 'float', 'str' or 'bool'. no type arguments of type 'type' are allowed.")
             return EnforceLiteralType(list_type_args,"literal")
         case _:
-            if not hasattr(type_t, "__args__"):
-                return EnforceType(_TYPE_CLASS, typename, typename)
-            raise __type_invalid_error(type_t)
+            return EnforceType(_TYPE_CLASS, typename, typename)
 
 #
 # type verification functions
