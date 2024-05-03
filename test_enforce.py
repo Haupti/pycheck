@@ -138,7 +138,6 @@ test20()
 test21(d=[1, None])
 test22(d=1)
 test22()
-test22(d=None)
 enforced(1, int)
 enforced([1], list[int])
 

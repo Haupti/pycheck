@@ -139,6 +139,12 @@ def __create_error_type_hint(e):
         case "tuple":
             inner_type_hints = ", ".join(map(str,[__create_error_type_hint(t) for t in expected_type.inner_type]))
             return f"tuple[{inner_type_hints}]"
+        case "union":
+            inner_type_hints = ", ".join(map(str,[__create_error_type_hint(t) for t in expected_type.inner_type]))
+            return f"union[{inner_type_hints}]"
+        case "optional":
+            inner_type_hints = ", ".join(map(str,[__create_error_type_hint(t) for t in expected_type.inner_type]))
+            return f"optional[{inner_type_hints}]"
         case "dict":
             inner_type_hints = ", ".join(map(str,[f"{__show_key_name(t.key_name)}: {__create_error_type_hint(t.enforce_type)}" for t in expected_type.inner_type]))
             return f"dict[{inner_type_hints}]"
@@ -259,7 +265,6 @@ def __parse_type(type_t: any) -> EnforceType:
         case 'Optional':
             list_type_args = list(type_t.__args__)
             inner_types = [__parse_type(list_type_arg) for list_type_arg in list_type_args]
-            inner_types.append(EnforceType(_TYPE_NONE, None, "None"))
             return EnforceType(_TYPE_UNION, inner_types, "union")
         case 'Union':
             list_type_args = list(type_t.__args__)
