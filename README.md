@@ -48,6 +48,7 @@ there is no typechecking of a function without the decorator.\
 | enable_enforce | function() -> None | enables typechecking globaly (default) |
 | disable_enforce | function() -> None | disable typechecking globaly |
 | union | type | alias for typing.Union (exported by the typing module) |
+| optional | type | alias for typing.Optional (exported by the typing module), which itself is an alias: Optional[int] <-> Union[int, None] |
 | function | type | alias for types.FunctionType (exported by the types module) |
 | literal | type | alias for typing.Literal (exported by the typing module) |
 
@@ -69,6 +70,7 @@ at the moment, the following types are supported:
 | any | any |  ...is not checked |
 | None | None | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |
+| optional | optional[int, float] | ... must be of either of type int, float or None |
 | literal | literal["mark", 2.5] | ... must be of either the value "mark" or the value 2.5 |
 | dict | dict[{'count': int, 'scale':float}] | ... must be a dictionary containing keys 'count', pointing to an integer, and 'scale', pointing to a float |
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
