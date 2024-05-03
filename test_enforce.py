@@ -1,6 +1,5 @@
-from enforce import enforce, enforced, union, function, EnforceError, literal
+from enforce import enforce, enforced, union, function, EnforceError, literal, optional
 import numpy as np
-import typing as typing
 
 #
 # to run the 'tests', run the file using the python interpreter
@@ -103,7 +102,15 @@ def test20(d: union[int, None]=None) -> any:
     return d
 
 @enforce
-def test20(d: typing.Optional[int]=None) -> any:
+def test20(d: optional[int]=None) -> any:
+    return d
+
+@enforce
+def test21(d: list[optional[int]]=[None]) -> any:
+    return d
+
+@enforce
+def test21(d: optional[int]=None) -> any:
     return d
 
 test1(1, [22], True, "hi")
@@ -128,6 +135,12 @@ test17("int")
 test18(1)
 test19([1, None])
 test20()
+test21(d=[1, 2.2, None])
+test22(d=1)
+test22(d=2.2)
+test22()
+test22(d=None)
+test22("hi")
 enforced(1, int)
 enforced([1], list[int])
 

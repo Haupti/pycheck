@@ -70,7 +70,7 @@ at the moment, the following types are supported:
 | any | any |  ...is not checked |
 | None | None | ... must not be there or explicity None (works for return/no returns) |
 | union | union[int, float] | ... must be of either of type int or float |
-| optional | optional[int, float] | ... must be of either of type int, float or None |
+| optional | optional[int] | ... must be of either of type int or None |
 | literal | literal["mark", 2.5] | ... must be of either the value "mark" or the value 2.5 |
 | dict | dict[{'count': int, 'scale':float}] | ... must be a dictionary containing keys 'count', pointing to an integer, and 'scale', pointing to a float |
 | list[\<types\>] | list[int, float] | ... must be a list and all elements must be either of type int or of type float |
